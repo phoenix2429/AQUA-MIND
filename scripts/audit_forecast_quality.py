@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import argparse
 import csv
+import io
 import json
 import math
 from collections import defaultdict
 from pathlib import Path
+
+_READ_BUFFER = 64 << 20  # 64 MB — avoids Windows OSError 22 on large files
 
 
 STATE_LIMIT = 100.0
@@ -29,7 +32,8 @@ def audit(files: list[Path]) -> dict[str, dict[str, float | int | None]]:
     )
     previous: dict[str, tuple[object, float, str]] = {}
     for path in files:
-        with path.open(encoding="utf-8", newline="") as source:
+        _raw = open(str(path), "rb", buffering=_READ_BUFFER)  # noqa: WPS515
+        with io.TextIOWrapper(_raw, encoding="utf-8", newline="") as source:
             for row in csv.DictReader(source):
                 state = row.get("state") or "Unknown"
                 stats = result[state]
@@ -63,7 +67,17 @@ def main() -> int:
     parser.add_argument("--input-dir", type=Path, default=Path("data/processed/all_states"))
     parser.add_argument("--output", type=Path, default=Path("models/forecast_quality_audit.json"))
     args = parser.parse_args()
-    files = sorted(path for path in args.input_dir.glob("*.normalized.csv") if path.name != "all_observations.normalized.csv")
+    patterns = ("*.normalized.csv", "*.quality_filtered.csv")
+    seen: set[Path] = set()
+    all_files: list[Path] = []
+    for pattern in patterns:
+        for path in args.input_dir.glob(pattern):
+            if path.name.startswith("all_observations"):
+                continue
+            if path not in seen:
+                seen.add(path)
+                all_files.append(path)
+    files = sorted(all_files)
     if not files:
         parser.error(f"No normalized resources found in {args.input_dir}")
     result = audit(files)

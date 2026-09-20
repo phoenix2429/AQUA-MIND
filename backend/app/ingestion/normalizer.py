@@ -3,13 +3,47 @@
 from __future__ import annotations
 
 import csv
+import io
 import math
+import mmap
 import re
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Iterable, Iterator
+
+# Buffer size for the encoding-probe read (64 MB).
+_READ_BUFFER = 64 << 20
+
+
+class _MmapRaw(io.RawIOBase):
+    """Wraps a read-only mmap as a RawIOBase stream.
+
+    Windows raises OSError 22 (EINVAL) during sequential read() syscalls on
+    files larger than ~300 MB because an internal kernel file-position counter
+    overflows.  mmap bypasses sequential read() entirely — it uses Windows
+    page-fault demand paging, which is immune to the overflow bug.
+    """
+
+    def __init__(self, file_obj, mm: mmap.mmap) -> None:
+        self._file = file_obj
+        self._mm = mm
+
+    def readinto(self, b: bytearray) -> int:  # type: ignore[override]
+        data = self._mm.read(len(b))
+        n = len(data)
+        b[:n] = data
+        return n
+
+    def readable(self) -> bool:
+        return True
+
+    def close(self) -> None:
+        if not self.closed:
+            self._mm.close()
+            self._file.close()
+        super().close()
 
 
 CANONICAL_FIELDS = (
@@ -166,7 +200,15 @@ class TelemetryNormalizer:
 
     def iter_file(self, path: Path, state_override: str | None = None) -> tuple[Iterator[NormalizedObservation], IngestionStats]:
         encoding = self._detect_encoding(path)
-        source = path.open("r", encoding=encoding, errors="replace", newline="")
+        # Use mmap to open the file via Windows demand-paging instead of
+        # sequential read() syscalls.  This is immune to OSError 22 (EINVAL)
+        # that Windows raises when the internal file-position counter overflows
+        # for files larger than ~300 MB.
+        _file = open(str(path), "rb")  # noqa: WPS515
+        _mm = mmap.mmap(_file.fileno(), 0, access=mmap.ACCESS_READ)
+        raw = _MmapRaw(_file, _mm)
+        buffered = io.BufferedReader(raw, buffer_size=_READ_BUFFER)
+        source = io.TextIOWrapper(buffered, encoding=encoding, errors="replace", newline="")
         reader = csv.DictReader(source)
         mapping = detect_columns(reader.fieldnames or [])
         stats = IngestionStats(source_file=str(path), detected_columns=mapping)
@@ -230,9 +272,12 @@ class TelemetryNormalizer:
 
     @staticmethod
     def _detect_encoding(path: Path) -> str:
-        with path.open("rb") as source:
-            sample = source.read(1_000_000)
-        for encoding in ("utf-8-sig", "utf-8", "utf-16", "cp1252"):
+        # Read a 4 MB sample for more reliable detection on large government CSVs.
+        # Use io.open with the large buffer to avoid OSError 22 on Windows even
+        # during the encoding-probe read.
+        with io.open(str(path), "rb", buffering=_READ_BUFFER) as source:
+            sample = source.read(4_000_000)
+        for encoding in ("utf-8-sig", "utf-8", "utf-16", "cp1252", "latin-1"):
             try:
                 sample.decode(encoding)
                 return encoding

@@ -4,13 +4,16 @@ from __future__ import annotations
 
 import argparse
 import csv
-import json
+import io
 import math
+import mmap
 import sys
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+
+_READ_BUFFER = 64 << 20  # 64 MB — avoids Windows OSError 22 on large files
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -70,13 +73,24 @@ def parse_timestamp(value: str) -> datetime:
 
 
 def normalized_files(root: Path) -> list[Path]:
-    return sorted(path for path in root.glob("*.normalized.csv") if path.name != "all_observations.normalized.csv")
+    patterns = ("*.normalized.csv", "*.quality_filtered.csv")
+    seen: set[Path] = set()
+    results: list[Path] = []
+    for pattern in patterns:
+        for path in root.glob(pattern):
+            if path.name.startswith("all_observations"):
+                continue
+            if path not in seen:
+                seen.add(path)
+                results.append(path)
+    return sorted(results)
 
 
 def station_windows(files: list[Path]) -> dict[str, StationWindow]:
     windows: dict[str, StationWindow] = {}
     for path in files:
-        with path.open(encoding="utf-8", newline="") as source:
+        _raw = open(str(path), "rb", buffering=_READ_BUFFER)  # noqa: WPS515
+        with io.TextIOWrapper(_raw, encoding="utf-8", newline="") as source:
             for row in csv.DictReader(source):
                 station_id = row["station_id"]
                 timestamp = parse_timestamp(row["timestamp"])
@@ -96,7 +110,8 @@ def evaluate(files: list[Path]) -> dict[str, object]:
     state_metrics: dict[str, dict[str, MetricAccumulator]] = defaultdict(lambda: defaultdict(MetricAccumulator))
     previous: dict[str, tuple[datetime, float]] = {}
     for path in files:
-        with path.open(encoding="utf-8", newline="") as source:
+        _raw = open(str(path), "rb", buffering=_READ_BUFFER)  # noqa: WPS515
+        with io.TextIOWrapper(_raw, encoding="utf-8", newline="") as source:
             for row in csv.DictReader(source):
                 station_id = row["station_id"]
                 timestamp = parse_timestamp(row["timestamp"])

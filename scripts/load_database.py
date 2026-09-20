@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import argparse
 import csv
+import io
 import sys
 from datetime import datetime
 from pathlib import Path
+
+_READ_BUFFER = 64 << 20  # 64 MB — avoids Windows OSError 22 on large files
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -50,7 +53,8 @@ def load_csv(observations_path: Path, stations_path: Path, batch_size: int = 2_0
         }
         station_map = dict(session.execute(select(Station.station_id, Station.id)).all())
         pending: list[dict[str, object]] = []
-        with observations_path.open("r", encoding="utf-8", newline="") as source:
+        _raw_obs = open(str(observations_path), "rb", buffering=_READ_BUFFER)  # noqa: WPS515
+        with io.TextIOWrapper(_raw_obs, encoding="utf-8", newline="") as source:
             for row in csv.DictReader(source):
                 station_id = station_map.get(row["station_id"])
                 if station_id is None:

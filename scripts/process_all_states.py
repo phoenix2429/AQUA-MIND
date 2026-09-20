@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
+import io
 import json
 import re
 import sys
@@ -17,7 +18,11 @@ from backend.app.ingestion.normalizer import CANONICAL_FIELDS, TelemetryNormaliz
 from scripts.build_station_registry import build_registry
 
 STATES = ("Telangana", "Andhra Pradesh", "Karnataka", "Tamil Nadu", "Maharashtra")
-NORMALIZER_VERSION = "2-finite-values"
+NORMALIZER_VERSION = "6-mmap-write-fix"
+# 64 MB write buffer — mirrors the read-side fix; bypasses Windows EINVAL
+# (OSError 22) that fires when WriteFile() crosses certain offsets on files
+# larger than ~300 MB in text mode.
+_WRITE_BUFFER = 64 << 20
 STATE_TOKENS = {
     "telangana": "Telangana",
     "andhra pradesh": "Andhra Pradesh",
@@ -53,16 +58,28 @@ def normalize_source(path: Path, output_dir: Path) -> tuple[dict[str, object], P
     with path.open("r", encoding="utf-8-sig", errors="replace", newline="") as source:
         columns = next(csv.reader(source), [])
     state = infer_state(path, columns)
-    output_path = output_dir / f"{path.stem}.normalized.csv"
-    stats_path = output_dir / f"{path.stem}.stats.json"
+    stem_name = path.stem
+    if state and state.lower().replace(" ", "_") not in stem_name.lower():
+        stem_name = f"{state.lower().replace(' ', '_')}_{stem_name}"
+    output_path = output_dir / f"{stem_name}.normalized.csv"
+    stats_path = output_dir / f"{stem_name}.stats.json"
     normalizer = TelemetryNormalizer()
     iterator, stats = normalizer.iter_file(path, state_override=state)
     output_dir.mkdir(parents=True, exist_ok=True)
-    with output_path.open("w", encoding="utf-8", newline="") as destination:
+    # Open output in binary mode + TextIOWrapper with a 64 MB write buffer.
+    # Python's text-mode WriteFile() path on Windows raises OSError 22 (EINVAL)
+    # when the internal file-position counter overflows for files > ~300 MB.
+    # Binary mode bypasses that code path entirely.
+    _raw_out = open(str(output_path), "wb", buffering=_WRITE_BUFFER)  # noqa: WPS515
+    destination = io.TextIOWrapper(_raw_out, encoding="utf-8", newline="")
+    try:
         writer = csv.DictWriter(destination, fieldnames=CANONICAL_FIELDS)
         writer.writeheader()
         for observation in iterator:
             writer.writerow(observation.as_dict())
+    finally:
+        destination.flush()
+        destination.close()
     result = {
         "state": state,
         "source_file": str(path),
@@ -87,8 +104,12 @@ def normalize_source(path: Path, output_dir: Path) -> tuple[dict[str, object], P
 
 
 def load_completed_report(path: Path, output_dir: Path) -> tuple[dict[str, object], Path] | None:
-    stats_path = output_dir / f"{path.stem}.stats.json"
-    output_path = output_dir / f"{path.stem}.normalized.csv"
+    state = infer_state(path, [])
+    stem_name = path.stem
+    if state and state.lower().replace(" ", "_") not in stem_name.lower():
+        stem_name = f"{state.lower().replace(' ', '_')}_{stem_name}"
+    stats_path = output_dir / f"{stem_name}.stats.json"
+    output_path = output_dir / f"{stem_name}.normalized.csv"
     if not stats_path.is_file() or not output_path.is_file():
         return None
     try:
@@ -102,6 +123,11 @@ def load_completed_report(path: Path, output_dir: Path) -> tuple[dict[str, objec
 
 def discover_csvs(data_root: Path) -> list[Path]:
     processed_root = (data_root / "processed").resolve()
+    raw_root = data_root / "raw"
+    if raw_root.is_dir():
+        raw_csvs = sorted(path for path in raw_root.rglob("*.csv") if processed_root not in path.resolve().parents)
+        if raw_csvs:
+            return raw_csvs
     return sorted(path for path in data_root.rglob("*.csv") if processed_root not in path.resolve().parents)
 
 
@@ -131,16 +157,25 @@ def main() -> int:
 
     registry_path = args.output_dir / "stations_all_states.csv"
     registry_inputs = args.output_dir / "all_observations.normalized.csv"
-    with registry_inputs.open("w", encoding="utf-8", newline="") as combined:
+    _raw_combined = open(str(registry_inputs), "wb", buffering=_WRITE_BUFFER)  # noqa: WPS515
+    combined = io.TextIOWrapper(_raw_combined, encoding="utf-8", newline="")
+    try:
         writer = None
         for path in normalized_files:
-            with path.open("r", encoding="utf-8", newline="") as source:
+            _raw_src = open(str(path), "rb", buffering=_WRITE_BUFFER)  # noqa: WPS515
+            source = io.TextIOWrapper(_raw_src, encoding="utf-8", newline="")
+            try:
                 reader = csv.DictReader(source)
                 if writer is None:
                     writer = csv.DictWriter(combined, fieldnames=reader.fieldnames or CANONICAL_FIELDS)
                     writer.writeheader()
                 for row in reader:
                     writer.writerow(row)
+            finally:
+                source.close()
+    finally:
+        combined.flush()
+        combined.close()
     registry = build_registry(registry_inputs, registry_path)
     audit = {"states": list(STATES), "discovered_files": len(discover_csvs(args.data_root)), "unique_sources_processed": len(normalized_files), "reports": reports, "registry": registry}
     audit_path = args.output_dir / "five_state_audit.json"

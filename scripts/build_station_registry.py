@@ -33,9 +33,12 @@ def parse_timestamp(value: str) -> datetime:
     return datetime.fromisoformat(value)
 
 
+import io
+
 def build_registry(input_path: Path, output_path: Path) -> dict[str, int | str]:
     stations: dict[str, dict[str, object]] = {}
-    with input_path.open("r", encoding="utf-8", newline="") as source:
+    _raw = open(str(input_path), "rb", buffering=64 << 20)  # noqa: WPS515
+    with io.TextIOWrapper(_raw, encoding="utf-8", newline="") as source:
         reader = csv.DictReader(source)
         for row in reader:
             station_id = row["station_id"]
