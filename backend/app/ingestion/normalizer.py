@@ -230,7 +230,8 @@ class TelemetryNormalizer:
 
     @staticmethod
     def _detect_encoding(path: Path) -> str:
-        sample = path.read_bytes()[:1_000_000]
+        with path.open("rb") as source:
+            sample = source.read(1_000_000)
         for encoding in ("utf-8-sig", "utf-8", "utf-16", "cp1252"):
             try:
                 sample.decode(encoding)

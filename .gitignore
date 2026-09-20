@@ -4,5 +4,8 @@ __pycache__/
 .env
 *.db
 *.sqlite3
+data/*.csv
+data/raw/
 data/processed/
 models/artifacts/
+models/*.json
