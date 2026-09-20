@@ -1,0 +1,150 @@
+"""Read-only station and observation REST endpoints."""
+
+from __future__ import annotations
+
+import math
+from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
+
+from .database.models import Observation, Station
+from .database.session import get_db
+from .analytics.historical import aggregate_station_history
+from .ml.persistence import persistence_forecast
+from .schemas import ForecastPoint, HistoricalPoint, NearbyStation, NearbyStationList, ObservationList, StationList, StationSummary
+
+router = APIRouter(prefix="/api", tags=["telemetry"])
+
+
+def haversine_km(latitude_a: float, longitude_a: float, latitude_b: float, longitude_b: float) -> float:
+    radius_km = 6371.0088
+    lat_a, lat_b = math.radians(latitude_a), math.radians(latitude_b)
+    delta_lat = math.radians(latitude_b - latitude_a)
+    delta_lon = math.radians(longitude_b - longitude_a)
+    value = math.sin(delta_lat / 2) ** 2 + math.cos(lat_a) * math.cos(lat_b) * math.sin(delta_lon / 2) ** 2
+    return radius_km * 2 * math.atan2(math.sqrt(value), math.sqrt(1 - value))
+
+
+@router.get("/states", response_model=list[str])
+def list_states(database: Session = Depends(get_db)) -> list[str]:
+    values = database.scalars(select(Station.state).where(Station.state.is_not(None)).distinct().order_by(Station.state)).all()
+    return list(values)
+
+
+@router.get("/states/{state}/districts", response_model=list[str])
+def list_districts(state: str, database: Session = Depends(get_db)) -> list[str]:
+    values = database.scalars(
+        select(Station.district)
+        .where(Station.state == state, Station.district.is_not(None))
+        .distinct()
+        .order_by(Station.district)
+    ).all()
+    return list(values)
+
+
+@router.get("/stations", response_model=StationList)
+def list_stations(
+    state: str | None = None,
+    district: str | None = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
+    database: Session = Depends(get_db),
+) -> StationList:
+    statement = select(Station)
+    count_statement = select(func.count()).select_from(Station)
+    filters = []
+    if state:
+        filters.append(Station.state == state)
+    if district:
+        filters.append(Station.district == district)
+    if filters:
+        statement = statement.where(*filters)
+        count_statement = count_statement.where(*filters)
+    total = database.scalar(count_statement) or 0
+    items = database.scalars(statement.order_by(Station.station_name).offset((page - 1) * page_size).limit(page_size)).all()
+    return StationList(items=items, total=total, page=page, page_size=page_size)
+
+
+@router.get("/stations/nearby", response_model=NearbyStationList)
+def nearby_stations(
+    latitude: float = Query(..., ge=-90, le=90),
+    longitude: float = Query(..., ge=-180, le=180),
+    radius_km: float = Query(50, gt=0, le=500),
+    limit: int = Query(10, ge=1, le=100),
+    database: Session = Depends(get_db),
+) -> NearbyStationList:
+    stations = database.scalars(select(Station).where(Station.latitude.is_not(None), Station.longitude.is_not(None))).all()
+    nearby = []
+    for station in stations:
+        distance = haversine_km(latitude, longitude, station.latitude, station.longitude)
+        if distance <= radius_km:
+            nearby.append(NearbyStation.model_validate({**StationSummary.model_validate(station).model_dump(), "distance_km": round(distance, 3)}))
+    nearby.sort(key=lambda station: station.distance_km)
+    return NearbyStationList(items=nearby[:limit], latitude=latitude, longitude=longitude, radius_km=radius_km)
+
+
+@router.get("/stations/{station_id}", response_model=StationSummary)
+def get_station(station_id: str, database: Session = Depends(get_db)) -> Station:
+    station = database.scalar(select(Station).where(Station.station_id == station_id))
+    if station is None:
+        raise HTTPException(status_code=404, detail="Station was not found")
+    return station
+
+
+@router.get("/stations/{station_id}/observations", response_model=ObservationList)
+def list_observations(
+    station_id: str,
+    start: datetime | None = None,
+    end: datetime | None = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(500, ge=1, le=2000),
+    database: Session = Depends(get_db),
+) -> ObservationList:
+    station = database.scalar(select(Station).where(Station.station_id == station_id))
+    if station is None:
+        raise HTTPException(status_code=404, detail="Station was not found")
+    filters = [Observation.station_id == station.id]
+    if start:
+        filters.append(Observation.timestamp >= start)
+    if end:
+        filters.append(Observation.timestamp <= end)
+    total = database.scalar(select(func.count()).select_from(Observation).where(*filters)) or 0
+    items = database.scalars(
+        select(Observation)
+        .where(*filters)
+        .order_by(Observation.timestamp)
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    ).all()
+    return ObservationList(items=items, total=total, page=page, page_size=page_size)
+
+
+@router.get("/stations/{station_id}/history", response_model=list[HistoricalPoint])
+def station_history(
+    station_id: str,
+    start: datetime | None = None,
+    end: datetime | None = None,
+    buckets: int = Query(500, ge=1, le=2000),
+    database: Session = Depends(get_db),
+) -> list[HistoricalPoint]:
+    station = database.scalar(select(Station).where(Station.station_id == station_id))
+    if station is None:
+        raise HTTPException(status_code=404, detail="Station was not found")
+    return aggregate_station_history(database, station.id, start=start, end=end, buckets=buckets)
+
+
+@router.get("/stations/{station_id}/forecast", response_model=list[ForecastPoint])
+def station_forecast(
+    station_id: str,
+    horizon_points: int = Query(4, ge=1, le=24),
+    database: Session = Depends(get_db),
+) -> list[ForecastPoint]:
+    station = database.scalar(select(Station).where(Station.station_id == station_id))
+    if station is None:
+        raise HTTPException(status_code=404, detail="Station was not found")
+    forecast = persistence_forecast(database, station.id, horizon_points=horizon_points)
+    if not forecast:
+        raise HTTPException(status_code=422, detail="Forecast unavailable because the station has no observations")
+    return forecast

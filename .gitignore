@@ -1,0 +1,8 @@
+__pycache__/
+.pytest_cache/
+*.py[cod]
+.env
+*.db
+*.sqlite3
+data/processed/
+models/artifacts/
