@@ -2,10 +2,15 @@ __pycache__/
 .pytest_cache/
 *.py[cod]
 .env
+
+# Local databases
 *.db
+*.db-journal
 *.sqlite3
-data/*.csv
-data/raw/
-data/processed/
+
+# Local datasets — never commit raw/processed groundwater data
+data/
+
+# Local ML artifacts
 models/artifacts/
 models/*.json
