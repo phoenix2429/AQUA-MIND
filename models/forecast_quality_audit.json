@@ -1,0 +1,52 @@
+{
+  "Andhra Pradesh": {
+    "observations": 2497869,
+    "non_finite_values": 0,
+    "absolute_value_over_100": 10625,
+    "minimum": -999.999,
+    "maximum": 222.987,
+    "transitions": 2497449,
+    "absolute_transition_over_100": 2421,
+    "maximum_absolute_transition": 993.4490000000001
+  },
+  "Karnataka": {
+    "observations": 6883356,
+    "non_finite_values": 0,
+    "absolute_value_over_100": 236548,
+    "minimum": -1561912100.0,
+    "maximum": 9505536.0,
+    "transitions": 6881556,
+    "absolute_transition_over_100": 9203,
+    "maximum_absolute_transition": 1561913031.89
+  },
+  "Maharashtra": {
+    "observations": 4777469,
+    "non_finite_values": 0,
+    "absolute_value_over_100": 3005,
+    "minimum": -3326.0,
+    "maximum": 459884.47,
+    "transitions": 4776016,
+    "absolute_transition_over_100": 183,
+    "maximum_absolute_transition": 459886.41
+  },
+  "Tamil Nadu": {
+    "observations": 3991350,
+    "non_finite_values": 0,
+    "absolute_value_over_100": 12564,
+    "minimum": -2473.171,
+    "maximum": 4435987.5,
+    "transitions": 3990500,
+    "absolute_transition_over_100": 2119,
+    "maximum_absolute_transition": 4435994.15
+  },
+  "Telangana": {
+    "observations": 3521117,
+    "non_finite_values": 0,
+    "absolute_value_over_100": 5239,
+    "minimum": -3014.61,
+    "maximum": 2839585.5,
+    "transitions": 3520212,
+    "absolute_transition_over_100": 928,
+    "maximum_absolute_transition": 2839601.186
+  }
+}

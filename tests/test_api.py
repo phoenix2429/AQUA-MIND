@@ -58,3 +58,50 @@ def test_observations_and_nearby_search() -> None:
 def test_unknown_station_returns_404() -> None:
     client = make_client()
     assert client.get("/api/stations/missing").status_code == 404
+
+
+def test_forecast_persistence_default() -> None:
+    client = make_client()
+    resp = client.get("/api/stations/A/forecast")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data) == 4
+    assert data[0]["model_name"] == "persistence"
+    assert data[0]["predicted_value"] == -9.0
+
+
+def test_forecast_ml_models() -> None:
+    client = make_client()
+    # Random Forest
+    resp_rf = client.get("/api/stations/A/forecast?model=random_forest&horizon_points=2")
+    assert resp_rf.status_code == 200
+    data_rf = resp_rf.json()
+    assert len(data_rf) == 2
+    assert data_rf[0]["model_name"] == "random_forest"
+    assert isinstance(data_rf[0]["predicted_value"], float)
+
+    # XGBoost
+    resp_xgb = client.get("/api/stations/A/forecast?model=xgboost&horizon_points=2")
+    assert resp_xgb.status_code == 200
+    data_xgb = resp_xgb.json()
+    assert len(data_xgb) == 2
+    assert data_xgb[0]["model_name"] == "xgboost"
+    assert isinstance(data_xgb[0]["predicted_value"], float)
+
+
+def test_forecast_invalid_model_fails_validation() -> None:
+    client = make_client()
+    resp = client.get("/api/stations/A/forecast?model=unknown_deep_net")
+    assert resp.status_code == 422
+
+
+def test_list_models_endpoint() -> None:
+    client = make_client()
+    resp = client.get("/api/models")
+    assert resp.status_code == 200
+    models = resp.json()
+    names = [m["model_name"] for m in models]
+    assert "persistence" in names
+    assert "random_forest" in names
+    assert "xgboost" in names
+

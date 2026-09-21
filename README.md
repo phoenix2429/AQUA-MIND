@@ -53,6 +53,16 @@ Run tests:
 python -m pytest tests -q
 ```
 
+Train ML models (Random Forest & XGBoost with Persistence comparison):
+
+```powershell
+# Dev/sample run (5% per station)
+python scripts/train_models.py --sample-frac 0.05
+
+# Full run (all 5 states)
+python scripts/train_models.py
+```
+
 Run the backend API locally:
 
 ```powershell
@@ -68,8 +78,9 @@ The current read-only API includes:
 - `GET /api/stations/{station_id}`
 - `GET /api/stations/{station_id}/observations?page=&page_size=&start=&end=`
 - `GET /api/stations/{station_id}/history?start=&end=&buckets=`
-- `GET /api/stations/{station_id}/forecast?horizon_points=`
+- `GET /api/stations/{station_id}/forecast?horizon_points=&model=` (`persistence` [default], `random_forest`, `xgboost`)
 - `GET /api/stations/nearby?latitude=&longitude=&radius_km=&limit=`
+- `GET /api/models` (model listing, deployment status, and test evaluation metrics)
 
 Interactive API documentation is available at `http://127.0.0.1:8001/docs` while the server is running.
 

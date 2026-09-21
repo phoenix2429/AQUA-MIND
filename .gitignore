@@ -1,4 +1,4 @@
-﻿__pycache__/
+__pycache__/
 .pytest_cache/
 *.py[cod]
 .env
@@ -19,6 +19,7 @@ data/**/*.csv
 data/**/*.json
 data/**/*.log
 
-# Local ML artifacts
-models/artifacts/
-models/*.json
+# Local ML artifacts — exclude large binary model files, keep JSON metadata
+models/random_forest/model.joblib
+models/xgboost/model.joblib
+models/*.joblib

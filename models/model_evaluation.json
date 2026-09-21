@@ -1,0 +1,195 @@
+{
+  "run_timestamp": "2026-09-21T14:19:15.974714Z",
+  "is_sample_run": true,
+  "sample_frac": 0.05,
+  "dataset": {
+    "input_files": [
+      "gwl_tel_6_hourly_andhra_pradesh_gw_ap_2021_2025.quality_filtered.csv",
+      "gwl_tel_6_hourly_andhra_pradesh_gw_ap_2026_2030.quality_filtered.csv",
+      "gwl_tel_6_hourly_karnataka_gw_ka_2021_2025.quality_filtered.csv",
+      "gwl_tel_6_hourly_karnataka_gw_ka_2026_2030.quality_filtered.csv",
+      "gwl_tel_6_hourly_maharashtra_gw_mh_2021_2025.quality_filtered.csv",
+      "gwl_tel_6_hourly_maharashtra_gw_mh_2026_2030.quality_filtered.csv",
+      "gwl_tel_6_hourly_tamil_nadu_sw_gw_tn_2021_2025.quality_filtered.csv",
+      "gwl_tel_6_hourly_tamil_nadu_sw_gw_tn_2026_2030.quality_filtered.csv",
+      "gwl_tel_6_hourly_telangana_gw_ts_2021_2025.quality_filtered.csv",
+      "gwl_tel_6_hourly_telangana_gw_ts_2026_2030.quality_filtered.csv"
+    ],
+    "total_feature_rows": 1060499,
+    "train_rows": 742349,
+    "val_rows": 159075,
+    "test_rows": 159075,
+    "date_range": {
+      "start": "2021-01-01T00:24:00",
+      "end": "2026-09-18T21:00:00"
+    },
+    "features": [
+      "lag_6h",
+      "lag_12h",
+      "lag_24h",
+      "lag_48h",
+      "lag_7d",
+      "rolling_mean_7d",
+      "rolling_std_7d",
+      "rolling_mean_30d",
+      "trend_7d",
+      "hour",
+      "day_of_year",
+      "month",
+      "season",
+      "latitude",
+      "longitude",
+      "elevation_msl"
+    ],
+    "target": "groundwater_level_next_step"
+  },
+  "split": {
+    "method": "Global chronological: oldest 70% train, next 15% val, newest 15% test",
+    "train_frac": 0.7,
+    "val_frac": 0.15,
+    "test_frac": 0.15,
+    "shuffle": false
+  },
+  "models": {
+    "persistence": {
+      "description": "Next value = last observed (lag_6h). Rows without lag_6h excluded.",
+      "test_metrics": {
+        "n": 7430,
+        "mae": 0.607264,
+        "rmse": 3.778346,
+        "r2": 0.972034
+      },
+      "test_n_evaluated": 7430
+    },
+    "random_forest": {
+      "version": "1.0",
+      "params": {
+        "n_estimators": 200,
+        "max_depth": 20,
+        "min_samples_leaf": 10,
+        "max_features": 0.5,
+        "n_jobs": -1,
+        "random_state": 42
+      },
+      "validation_metrics": {
+        "n": 159075,
+        "mae": 7.168076,
+        "rmse": 13.967357,
+        "r2": 0.516721
+      },
+      "test_metrics": {
+        "n": 159075,
+        "mae": 7.88731,
+        "rmse": 15.26068,
+        "r2": 0.482512
+      },
+      "per_state_test_metrics": {
+        "Andhra Pradesh": {
+          "n": 12146,
+          "mae": 4.427266,
+          "rmse": 9.978798,
+          "r2": 0.415218
+        },
+        "Karnataka": {
+          "n": 49589,
+          "mae": 12.930735,
+          "rmse": 23.10466,
+          "r2": 0.486311
+        },
+        "Maharashtra": {
+          "n": 40899,
+          "mae": 6.824954,
+          "rmse": 10.949023,
+          "r2": 0.307156
+        },
+        "Tamil Nadu": {
+          "n": 30791,
+          "mae": 5.07404,
+          "rmse": 9.256341,
+          "r2": 0.476461
+        },
+        "Telangana": {
+          "n": 25650,
+          "mae": 4.846374,
+          "rmse": 8.433237,
+          "r2": 0.197826
+        }
+      },
+      "artifact_dir": "models\\random_forest",
+      "library_versions": {
+        "scikit-learn": "1.8.0",
+        "xgboost": "3.4.1",
+        "joblib": "1.5.3",
+        "numpy": "2.3.0"
+      }
+    },
+    "xgboost": {
+      "version": "1.0",
+      "params": {
+        "n_estimators": 500,
+        "max_depth": 8,
+        "learning_rate": 0.05,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "min_child_weight": 10,
+        "random_state": 42,
+        "n_jobs": -1,
+        "tree_method": "hist",
+        "early_stopping_rounds": 30,
+        "eval_metric": "rmse"
+      },
+      "validation_metrics": {
+        "n": 159075,
+        "mae": 7.08887,
+        "rmse": 13.739479,
+        "r2": 0.532361
+      },
+      "test_metrics": {
+        "n": 159075,
+        "mae": 7.859135,
+        "rmse": 15.122334,
+        "r2": 0.491852
+      },
+      "per_state_test_metrics": {
+        "Andhra Pradesh": {
+          "n": 12146,
+          "mae": 3.998713,
+          "rmse": 9.044111,
+          "r2": 0.519637
+        },
+        "Karnataka": {
+          "n": 49589,
+          "mae": 13.209802,
+          "rmse": 23.160369,
+          "r2": 0.483831
+        },
+        "Maharashtra": {
+          "n": 40899,
+          "mae": 6.542253,
+          "rmse": 10.575489,
+          "r2": 0.353623
+        },
+        "Tamil Nadu": {
+          "n": 30791,
+          "mae": 5.262515,
+          "rmse": 9.263801,
+          "r2": 0.475617
+        },
+        "Telangana": {
+          "n": 25650,
+          "mae": 4.559571,
+          "rmse": 7.819331,
+          "r2": 0.310365
+        }
+      },
+      "artifact_dir": "models\\xgboost",
+      "library_versions": {
+        "scikit-learn": "1.8.0",
+        "xgboost": "3.4.1",
+        "joblib": "1.5.3",
+        "numpy": "2.3.0"
+      }
+    }
+  },
+  "comparison_note": "Models are compared on the same held-out chronological test set (newest 15%). Persistence requires a non-null lag_6h so its n may differ from RF/XGBoost. No model is declared 'best' automatically \u2014 compare MAE, RMSE, R\u00b2 and per-state results."
+}

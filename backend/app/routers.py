@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 from datetime import datetime
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
@@ -12,6 +13,7 @@ from sqlalchemy.orm import Session
 from .database.models import Observation, Station
 from .database.session import get_db
 from .analytics.historical import aggregate_station_history
+from .ml.forecast_service import generate_forecast, get_available_models_info
 from .ml.persistence import persistence_forecast
 from .schemas import ForecastPoint, HistoricalPoint, NearbyStation, NearbyStationList, ObservationList, StationList, StationSummary
 
@@ -139,12 +141,25 @@ def station_history(
 def station_forecast(
     station_id: str,
     horizon_points: int = Query(4, ge=1, le=24),
+    model: str = Query("persistence", pattern="^(persistence|random_forest|xgboost)$"),
     database: Session = Depends(get_db),
 ) -> list[ForecastPoint]:
     station = database.scalar(select(Station).where(Station.station_id == station_id))
     if station is None:
         raise HTTPException(status_code=404, detail="Station was not found")
-    forecast = persistence_forecast(database, station.id, horizon_points=horizon_points)
+    try:
+        forecast = generate_forecast(database, station, model_name=model, horizon_points=horizon_points)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
     if not forecast:
         raise HTTPException(status_code=422, detail="Forecast unavailable because the station has no observations")
     return forecast
+
+
+@router.get("/models")
+def list_models() -> list[dict[str, Any]]:
+    return get_available_models_info()
+

@@ -15,11 +15,11 @@
 | Feature Engineering Pipeline | ✅ Complete | Lags, rolling stats, OLS trend, calendar features (`scripts/create_features.py`) |
 | Persistence Baseline Evaluation | ✅ Complete | Chronological 70/15/15 split; MAE/RMSE/R² per state |
 | Backend Foundation (FastAPI + SQLAlchemy) | ✅ Complete | 7 DB models, read-only REST API endpoints live |
-| Test Suite | ✅ 50/50 Passed | All unit tests passing cleanly |
+| Test Suite | ✅ 97/97 Passed | All unit, API, and ML tests passing cleanly |
 | GitHub Push | ✅ Complete | Live at [phoenix2429/AQUA-MIND](https://github.com/phoenix2429/AQUA-MIND) |
 | Data Sharing (Kaggle) | 🔄 Pending Upload | Full `data/` folder (raw + processed) to be uploaded to Kaggle |
 | PostgreSQL Bulk Ingestion | 🔄 In Progress | Alembic migrations + upsert-safe bulk loading |
-| Random Forest & XGBoost | ⏳ Next | Chronological train/val/test splits + comparison vs baseline |
+| Random Forest & XGBoost | ✅ Complete | Chronological 70/15/15 splits, evaluated vs persistence, REST API integrated |
 | Tree SHAP Explainability | ⏳ Pending | Per-prediction feature attribution |
 | GSS, GBIM & DIE Analytics | ⏳ Pending | Sustainability scores, behavior intelligence, recommendations |
 | Expanded REST API | ⏳ Pending | SHAP, GSS, GBIM, recommendations, scenario endpoints |
@@ -67,14 +67,18 @@
 - [x] Calendar: `hour`, `day_of_year`, `month`, `season` (India-centric).
 - [x] Strict chronological ordering — no future data leakage.
 
-### ✅ STEP 5 (Baseline) — Persistence Model Evaluation
-- [x] Persistence forecasting: `backend/app/ml/persistence.py`.
-- [x] Chronological evaluation: `scripts/evaluate_persistence.py`.
-- [x] Per-station splits: 70% train, 15% validation, 15% test.
-- [x] MAE, RMSE, R² computed per split and per state.
-- [x] Results in `models/persistence_evaluation.json`.
+### ✅ STEP 5 — Machine Learning Forecasting (Persistence, Random Forest, XGBoost)
+- [x] Persistence baseline: `backend/app/ml/persistence.py`.
+- [x] Random Forest model wrapper: `backend/app/ml/random_forest.py` (200 trees, configurable).
+- [x] XGBoost model wrapper: `backend/app/ml/xgboost_model.py` (hist method, early stopping on val).
+- [x] Evaluation metrics: `backend/app/ml/evaluation.py` (MAE, RMSE, R², per-state aggregation).
+- [x] Training pipeline: `scripts/train_models.py` (chronological 70/15/15 splits, zero data leakage).
+- [x] Evaluated all 3 models on the identical test split (newest 15% observations).
+- [x] Model artifacts saved in `models/random_forest/` and `models/xgboost/` (model binary, metadata, feature schema).
+- [x] Comprehensive evaluation summary saved in `models/model_evaluation.json`.
+- [x] Full architecture documented in `docs/ml-pipeline.md`.
 
-### ✅ STEP 6 — Backend API Foundation
+### ✅ STEP 6 — Backend API Foundation & ML Forecast Routing
 - [x] `GET /health`
 - [x] `GET /api/states`
 - [x] `GET /api/states/{state}/districts`
@@ -82,14 +86,15 @@
 - [x] `GET /api/stations/{station_id}`
 - [x] `GET /api/stations/{station_id}/observations` (paginated, date-filtered)
 - [x] `GET /api/stations/{station_id}/history` (bucketed aggregation)
-- [x] `GET /api/stations/{station_id}/forecast` (persistence)
-- [x] `GET /api/stations/nearby` (Haversine)
+- [x] `GET /api/stations/{station_id}/forecast?horizon_points=&model=` (supports `persistence` [default], `random_forest`, `xgboost`)
+- [x] `GET /api/stations/nearby` (Haversine distance search)
+- [x] `GET /api/models` (model listing, deployment status, and test benchmark metrics)
 
 ### ✅ STEP 7 — GitHub & Version Control
 - [x] Git initialized and linked to `phoenix2429/AQUA-MIND`.
-- [x] 41 source files committed and pushed to `main` branch.
+- [x] `.gitignore` updated to exclude large binary `.joblib` files while keeping metadata and schema JSONs.
 - [x] Folder structure (`.gitkeep`) committed to track `data/raw/<State>/` layout.
-- [x] 50/50 unit tests passing cleanly.
+- [x] 97/97 unit and API tests passing cleanly.
 
 ---
 
@@ -99,26 +104,24 @@
 
 ---
 
-## 🎯 REMAINING ROADMAP (STEPS 3–12)
+## 🎯 REMAINING ROADMAP
 
 ```
-STEP 3 (cont.): Alembic + PostgreSQL bulk ingestion
+[COMPLETED] STEP 5: Random Forest & XGBoost Training, Evaluation & Baseline Comparison
        ↓
-STEP 5: Random Forest & XGBoost Training & Evaluation
-       ↓
-STEP 6: Tree SHAP Explainability Engine
+STEP 6: Tree SHAP Explainability Engine (per-prediction feature attribution)
        ↓
 STEP 7: GSS, GBIM & Decision Intelligence Engine (DIE)
        ↓
-STEP 8: Expanded REST API (SHAP, GSS, GBIM, recommendations, scenario)
+STEP 8: Expanded REST API (SHAP, GSS, GBIM, recommendations, scenarios)
        ↓
 STEP 9: React / Vite Frontend — Station Analysis Page first
        ↓
 STEP 10: Authentication & Role-Based Access Control (RBAC)
        ↓
-STEP 11: Map Page, Nearby Stations, Scenario Analysis & Admin Dashboard
+STEP 11: Interactive Map Page, Nearby Stations, Scenario Analysis & Admin Dashboard
        ↓
-STEP 12: Final Integration, Test Updates & Documentation
+STEP 12: PostgreSQL bulk loading & final integration
 ```
 
 ---
@@ -130,41 +133,45 @@ AQUA-MIND/
 ├── .env.example
 ├── .gitignore
 ├── README.md
+├── requirements.txt
 ├── aqua_mind.db              ← Local SQLite dev database (gitignored)
 ├── backend/
 │   └── app/
 │       ├── analytics/        ← historical.py
 │       ├── database/         ← models.py, session.py, init_db.py
 │       ├── ingestion/        ← normalizer.py
-│       ├── ml/               ← persistence.py
+│       ├── ml/
+│       │   ├── evaluation.py        ← MAE, RMSE, R² & group aggregators
+│       │   ├── forecast_service.py  ← Unified forecasting (Persistence, RF, XGB)
+│       │   ├── persistence.py       ← Baseline persistence model
+│       │   ├── random_forest.py     ← Scikit-learn RF wrapper
+│       │   └── xgboost_model.py     ← XGBoost regressor wrapper
 │       ├── main.py
 │       ├── routers.py
 │       └── schemas.py
 ├── data/                     ← gitignored (CSVs stay local / on Kaggle)
-│   ├── raw/
-│   │   ├── Telangana/
-│   │   ├── Andhra_Pradesh/
-│   │   ├── Karnataka/
-│   │   ├── Tamil_Nadu/
-│   │   └── Maharashtra/
+│   ├── raw/                  ← 5 states (Andhra Pradesh, Karnataka, Maharashtra, Tamil Nadu, Telangana)
 │   └── processed/
 │       ├── all_states/
 │       └── quality_filtered/
 ├── docs/
 │   ├── PROJECT_STATUS.md     ← This file
+│   ├── ml-pipeline.md        ← Full ML forecasting architecture & evaluation specs
 │   ├── data-audit.md
 │   ├── data-quality-policy.md
 │   └── teammate-handoff.md
 ├── models/
+│   ├── random_forest/        ← model.joblib (gitignored), metadata.json, feature_schema.json
+│   ├── xgboost/              ← model.joblib (gitignored), metadata.json, feature_schema.json
+│   ├── model_evaluation.json ← Side-by-side benchmark (Persistence vs RF vs XGB)
 │   ├── persistence_evaluation.json
 │   └── forecast_quality_audit.json
 ├── scripts/
-│   ├── process_all_states.py
-│   ├── apply_quality_filter.py
-│   ├── build_station_registry.py
-│   ├── create_features.py
+│   ├── train_models.py       ← End-to-end ML training & evaluation pipeline
+│   ├── create_features.py    ← 16 lag & rolling feature engineering
 │   ├── evaluate_persistence.py
-│   ├── load_database.py
-│   └── ...
-└── tests/                    ← 50/50 passing
+│   ├── apply_quality_filter.py
+│   ├── process_all_states.py
+│   └── load_database.py
+└── tests/                    ← 97/97 tests passing (unit, API, ML models, edge cases)
 ```

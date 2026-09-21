@@ -1,0 +1,29 @@
+{
+  "feature_names": [
+    "lag_6h",
+    "lag_12h",
+    "lag_24h",
+    "lag_48h",
+    "lag_7d",
+    "rolling_mean_7d",
+    "rolling_std_7d",
+    "rolling_mean_30d",
+    "trend_7d",
+    "hour",
+    "day_of_year",
+    "month",
+    "season",
+    "latitude",
+    "longitude",
+    "elevation_msl"
+  ],
+  "n_features": 16,
+  "params": {
+    "n_estimators": 200,
+    "max_depth": 20,
+    "min_samples_leaf": 10,
+    "max_features": 0.5,
+    "n_jobs": -1,
+    "random_state": 42
+  }
+}
