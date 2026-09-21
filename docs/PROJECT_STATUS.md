@@ -1,5 +1,5 @@
 # AQUA-MIND — Project Status Report
-*Last Updated: 2026-09-21*
+*Last Updated: 2026-09-22*
 
 ---
 
@@ -13,13 +13,13 @@
 | `.gitignore` Protection | ✅ Complete | `data/` CSV files excluded from GitHub commits |
 | Data Quality Policy & Filtering | ✅ Complete | Physical bounds [-300 m, +50 m]; reports in `data/processed/quality_filtered/` |
 | Feature Engineering Pipeline | ✅ Complete | Lags, rolling stats, OLS trend, calendar features (`scripts/create_features.py`) |
-| Persistence Baseline Evaluation | ✅ Complete | Chronological 70/15/15 split; MAE/RMSE/R² per state |
-| Backend Foundation (FastAPI + SQLAlchemy) | ✅ Complete | 7 DB models, read-only REST API endpoints live |
-| Test Suite | ✅ 97/97 Passed | All unit, API, and ML tests passing cleanly |
+| Persistence Baseline Evaluation | ✅ Complete | Evaluation script now runs; latest artifact reports per-state MAE/RMSE/R² |
+| Backend Foundation (FastAPI + SQLAlchemy) | ✅ Complete | SQLAlchemy schema and read-only REST API endpoints live |
+| Test Suite | ⚠️ 96/97 Passed | 96 tests pass; ML API test requires ignored trained model binaries |
 | GitHub Push | ✅ Complete | Live at [phoenix2429/AQUA-MIND](https://github.com/phoenix2429/AQUA-MIND) |
 | Data Sharing (Kaggle) | 🔄 Pending Upload | Full `data/` folder (raw + processed) to be uploaded to Kaggle |
 | PostgreSQL Bulk Ingestion | 🔄 In Progress | Alembic migrations + upsert-safe bulk loading |
-| Random Forest & XGBoost | ✅ Complete | Chronological 70/15/15 splits, evaluated vs persistence, REST API integrated |
+| Random Forest & XGBoost | 🔄 Verification In Progress | Wrappers and training pipeline exist; full 100% run did not complete within the available runtime and binaries are not committed |
 | Tree SHAP Explainability | ⏳ Pending | Per-prediction feature attribution |
 | GSS, GBIM & DIE Analytics | ⏳ Pending | Sustainability scores, behavior intelligence, recommendations |
 | Expanded REST API | ⏳ Pending | SHAP, GSS, GBIM, recommendations, scenario endpoints |
@@ -67,15 +67,17 @@
 - [x] Calendar: `hour`, `day_of_year`, `month`, `season` (India-centric).
 - [x] Strict chronological ordering — no future data leakage.
 
-### ✅ STEP 5 — Machine Learning Forecasting (Persistence, Random Forest, XGBoost)
+### 🔄 STEP 5 — Machine Learning Forecasting (Persistence, Random Forest, XGBoost)
 - [x] Persistence baseline: `backend/app/ml/persistence.py`.
 - [x] Random Forest model wrapper: `backend/app/ml/random_forest.py` (200 trees, configurable).
 - [x] XGBoost model wrapper: `backend/app/ml/xgboost_model.py` (hist method, early stopping on val).
 - [x] Evaluation metrics: `backend/app/ml/evaluation.py` (MAE, RMSE, R², per-state aggregation).
-- [x] Training pipeline: `scripts/train_models.py` (chronological 70/15/15 splits, zero data leakage).
-- [x] Evaluated all 3 models on the identical test split (newest 15% observations).
-- [x] Model artifacts saved in `models/random_forest/` and `models/xgboost/` (model binary, metadata, feature schema).
-- [x] Comprehensive evaluation summary saved in `models/model_evaluation.json`.
+- [x] Training pipeline defines chronological 70/15/15 splits and training-set imputation.
+- [x] Persistence evaluation script fixed and rerun against the 10 local normalized resources.
+- [ ] Full 100% RF/XGBoost training run completed and independently verified.
+- [ ] RF/XGBoost model binaries available for API inference in this checkout.
+- [ ] Persistence, RF, and XGBoost verified on one common test population.
+- [ ] Comprehensive evaluation summary verified as a full-data result.
 - [x] Full architecture documented in `docs/ml-pipeline.md`.
 
 ### ✅ STEP 6 — Backend API Foundation & ML Forecast Routing
@@ -94,7 +96,7 @@
 - [x] Git initialized and linked to `phoenix2429/AQUA-MIND`.
 - [x] `.gitignore` updated to exclude large binary `.joblib` files while keeping metadata and schema JSONs.
 - [x] Folder structure (`.gitkeep`) committed to track `data/raw/<State>/` layout.
-- [x] 97/97 unit and API tests passing cleanly.
+- [ ] 97/97 unit and API tests passing cleanly — current run: 96 passed, 1 failed because ignored RF/XGBoost binaries are unavailable.
 
 ---
 
@@ -107,7 +109,7 @@
 ## 🎯 REMAINING ROADMAP
 
 ```
-[COMPLETED] STEP 5: Random Forest & XGBoost Training, Evaluation & Baseline Comparison
+[IN PROGRESS] STEP 5: Random Forest & XGBoost Training, Evaluation & Baseline Comparison
        ↓
 STEP 6: Tree SHAP Explainability Engine (per-prediction feature attribution)
        ↓
@@ -173,5 +175,5 @@ AQUA-MIND/
 │   ├── apply_quality_filter.py
 │   ├── process_all_states.py
 │   └── load_database.py
-└── tests/                    ← 97/97 tests passing (unit, API, ML models, edge cases)
+└── tests/                    ← 96/97 currently passing; API ML forecast test needs model binaries
 ```

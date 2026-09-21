@@ -35,6 +35,7 @@ Usage
 from __future__ import annotations
 
 import argparse
+import bisect
 import csv
 import io
 import json
@@ -42,7 +43,7 @@ import logging
 import math
 import sys
 import time
-from collections import defaultdict
+from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -104,45 +105,82 @@ class _StationState:
     lon: float | None
     elev: float | None
     history: list[_Obs] = field(default_factory=list)
+    timestamps: list[datetime] = field(default_factory=list)
+    window_7d: deque[_Obs] = field(default_factory=deque)
+    window_30d: deque[_Obs] = field(default_factory=deque)
+    sum_7d: float = 0.0
+    sumsq_7d: float = 0.0
+    sum_30d: float = 0.0
+    sum_x_7d: float = 0.0
+    sum_xx_7d: float = 0.0
+    sum_xy_7d: float = 0.0
+
+    def add(self, obs: _Obs) -> None:
+        self.history.append(obs)
+        self.timestamps.append(obs.ts)
+        self.window_7d.append(obs)
+        self.sum_7d += obs.gwl
+        self.sumsq_7d += obs.gwl * obs.gwl
+        self.window_30d.append(obs)
+        self.sum_30d += obs.gwl
+        x = obs.ts.timestamp() / 3600.0
+        self.sum_x_7d += x
+        self.sum_xx_7d += x * x
+        self.sum_xy_7d += x * obs.gwl
+        cutoff_7d = obs.ts - timedelta(days=7)
+        cutoff_30d = obs.ts - timedelta(days=30)
+        while self.history and self.history[0].ts < cutoff_30d:
+            self.history.pop(0)
+            self.timestamps.pop(0)
+        while self.window_7d and self.window_7d[0].ts < cutoff_7d:
+            removed = self.window_7d.popleft()
+            self.sum_7d -= removed.gwl
+            self.sumsq_7d -= removed.gwl * removed.gwl
+            x = removed.ts.timestamp() / 3600.0
+            self.sum_x_7d -= x
+            self.sum_xx_7d -= x * x
+            self.sum_xy_7d -= x * removed.gwl
+        while self.window_30d and self.window_30d[0].ts < cutoff_30d:
+            self.sum_30d -= self.window_30d.popleft().gwl
 
     def _lag(self, ts: datetime, delta: timedelta) -> float | None:
         target = ts - delta
-        tol = timedelta(hours=3)
-        for rec in reversed(self.history):
-            if rec.ts <= target + tol:
-                if abs((rec.ts - target).total_seconds()) <= 2 * 3600:
-                    return rec.gwl
-                break
-        return None
+        tolerance = timedelta(hours=2)
+        timestamps = self.timestamps
+        if len(timestamps) != len(self.history):
+            timestamps = [rec.ts for rec in self.history]
+        left = bisect.bisect_left(timestamps, target - tolerance)
+        right = bisect.bisect_right(timestamps, target + tolerance)
+        if left == right:
+            return None
+        return min(
+            self.history[left:right],
+            key=lambda rec: abs((rec.ts - target).total_seconds()),
+        ).gwl
 
     def _rolling(self, ts: datetime, days: int, min_obs: int = 4):
-        cutoff = ts - timedelta(days=days)
-        vals = [r.gwl for r in self.history if cutoff <= r.ts < ts]
+        vals = self.window_7d if days == 7 else self.window_30d
         if len(vals) < min_obs:
             return None, None
-        m = sum(vals) / len(vals)
+        if days == 7:
+            m = self.sum_7d / len(vals)
+            variance = (self.sumsq_7d - len(vals) * m * m) / (len(vals) - 1)
+        else:
+            m = sum(r.gwl for r in vals) / len(vals)
+            variance = sum((r.gwl - m) ** 2 for r in vals) / (len(vals) - 1)
         if len(vals) < 2:
             return m, None
-        v = sum((x - m) ** 2 for x in vals) / (len(vals) - 1)
-        return m, math.sqrt(v)
+        return m, math.sqrt(max(variance, 0.0))
 
     def _rolling_30d(self, ts: datetime, min_obs: int = 8) -> float | None:
-        cutoff = ts - timedelta(days=30)
-        vals = [r.gwl for r in self.history if cutoff <= r.ts < ts]
-        return sum(vals) / len(vals) if len(vals) >= min_obs else None
+        return self.sum_30d / len(self.window_30d) if len(self.window_30d) >= min_obs else None
 
     def _trend(self, ts: datetime, min_obs: int = 4) -> float | None:
-        cutoff = ts - timedelta(days=7)
-        pts = [(r.ts, r.gwl) for r in self.history if cutoff <= r.ts < ts]
-        if len(pts) < min_obs:
+        n = len(self.window_7d)
+        if n < min_obs:
             return None
-        origin = pts[0][0]
-        xs = [(t - origin).total_seconds() / 3600.0 for t, _ in pts]
-        ys = [g for _, g in pts]
-        n = len(xs)
-        xm, ym = sum(xs) / n, sum(ys) / n
-        num = sum((x - xm) * (y - ym) for x, y in zip(xs, ys))
-        den = sum((x - xm) ** 2 for x in xs)
+        num = self.sum_xy_7d - self.sum_x_7d * self.sum_7d / n
+        den = self.sum_xx_7d - self.sum_x_7d * self.sum_x_7d / n
         return num / den if den > 1e-10 else 0.0
 
     def build(self, obs: _Obs) -> dict | None:
@@ -227,7 +265,7 @@ def _stream_features(paths: list[Path], rng: np.random.Generator | None = None, 
             for ts, gwl, *_ in rows:
                 obs = _Obs(ts=ts, gwl=gwl)
                 feat = sstate.build(obs)
-                sstate.history.append(obs)
+                sstate.add(obs)
                 if feat is not None:
                     yield feat
 
