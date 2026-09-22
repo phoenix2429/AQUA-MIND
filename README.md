@@ -18,6 +18,8 @@ Phase 0 and the first Phase 1/2 slices are implemented:
 - Duplicate station/timestamp rows are rejected during normalization.
 - Timestamps are parsed from the source values; resource names are never treated as observation dates.
 - The data audit is documented in [docs/data-audit.md](docs/data-audit.md).
+To retrieve the excluded raw and processed data, follow
+[docs/kaggle-data-setup.md](docs/kaggle-data-setup.md).
 
 The current database defaults to local SQLite for development. PostgreSQL is supported through `DATABASE_URL`; credentials must be supplied through environment variables.
 

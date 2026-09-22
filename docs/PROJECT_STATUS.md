@@ -16,9 +16,9 @@
 | Persistence Baseline Evaluation | ✅ Complete | Evaluation script fixed and rerun for 10 resources and 5,426 stations |
 | Machine Learning Models (RF & XGB) | ✅ Full Run Verified | RF/XGBoost trained on 21,502,736 feature rows; binaries load and predict locally |
 | Backend Foundation (FastAPI + SQLAlchemy) | ✅ Implemented | Read-only REST API and persistence forecast routing are available |
-| Test Suite | ✅ 97/97 Passed | Complete suite passes; one warning remains for all-NaN median handling |
+| Test Suite | ✅ 102/102 Passed | Complete suite passes; one warning remains for all-NaN median handling |
 | GitHub Push | ✅ Complete | Changes pushed to the project branch |
-| Data Sharing (Kaggle) | 🔄 Pending Upload | Full local data remains external to the repository |
+| Data Sharing (Kaggle) | ✅ Setup Documented | Full local data remains external; `scripts/setup_kaggle_data.py` validates and retrieves it |
 | PostgreSQL Bulk Ingestion | 🔄 In Progress | Migrations, COPY loading, and production loading remain incomplete |
 | Tree SHAP Explainability | ✅ Implemented | Local RF/XGBoost explanations, additivity checks, API endpoints, and documentation verified |
 | GSS, GBIM & DIE Analytics | ✅ Implemented | Deterministic, versioned, threshold-configurable observation-only outputs |
@@ -96,9 +96,9 @@
 ### ✅ STEP 7 — Tests & Version Control
 - [x] Repository changes committed and pushed.
 - [x] `python -m pytest tests -q` executed.
-- [x] 97 tests pass.
+- [x] 102 tests pass.
 - [x] API ML forecast test passes with generated local binaries.
-- [x] 97/97 passing is verified locally.
+- [x] 102/102 passing is verified locally.
 
 ---
 
@@ -214,5 +214,5 @@ AQUA-MIND/
 │   ├── apply_quality_filter.py
 │   ├── process_all_states.py
 │   └── load_database.py
-└── tests/                        ← 96 passing, 1 failing currently
+└── tests/                        ← focused and full suite passing
 ```
