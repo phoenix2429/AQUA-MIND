@@ -36,15 +36,15 @@ class MLForecastPoint:
     model_version: str = "1.0"
 
 
-_MODEL_CACHE: dict[str, Any] = {}
+_MODEL_CACHE: dict[tuple[str, str], Any] = {}
 
 
 def load_ml_model(model_name: str, model_dir: Path | None = None) -> Any:
     """Load and cache a trained ML model (RandomForest or XGBoost)."""
-    if model_name in _MODEL_CACHE:
-        return _MODEL_CACHE[model_name]
-
     base_dir = model_dir or MODELS_DIR
+    cache_key = (model_name, str(base_dir.resolve()))
+    if cache_key in _MODEL_CACHE:
+        return _MODEL_CACHE[cache_key]
     target_dir = base_dir / model_name
     if not target_dir.is_dir() or not (target_dir / "model.joblib").is_file():
         raise FileNotFoundError(f"Model artifacts for '{model_name}' not found at {target_dir}")
@@ -56,7 +56,7 @@ def load_ml_model(model_name: str, model_dir: Path | None = None) -> Any:
     else:
         raise ValueError(f"Unsupported ML model: {model_name}")
 
-    _MODEL_CACHE[model_name] = model
+    _MODEL_CACHE[cache_key] = model
     return model
 
 

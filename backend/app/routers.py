@@ -16,7 +16,8 @@ from .analytics.historical import aggregate_station_history
 from .analytics.decision import station_analytics
 from .ml.forecast_service import generate_forecast, get_available_models_info
 from .ml.persistence import persistence_forecast
-from .schemas import ForecastPoint, HistoricalPoint, NearbyStation, NearbyStationList, ObservationList, StationList, StationSummary, GSSResponse, GBIMResponse, RecommendationResponse, StationAnalyticsSummary
+from .ml.shap_explainer import ExplanationUnavailable, explain_station
+from .schemas import ForecastPoint, HistoricalPoint, NearbyStation, NearbyStationList, ObservationList, StationList, StationSummary, GSSResponse, GBIMResponse, RecommendationResponse, StationAnalyticsSummary, SHAPExplanation
 
 router = APIRouter(prefix="/api", tags=["telemetry"])
 
@@ -158,6 +159,36 @@ def station_forecast(
     if not forecast:
         raise HTTPException(status_code=422, detail="Forecast unavailable because the station has no observations")
     return forecast
+
+
+def _station_explanation(station_id: str, model: str, database: Session) -> SHAPExplanation:
+    station = database.scalar(select(Station).where(Station.station_id == station_id))
+    if station is None:
+        raise HTTPException(status_code=404, detail="Station was not found")
+    try:
+        return explain_station(database, station, model_name=model)
+    except (FileNotFoundError, ExplanationUnavailable) as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+    except (ValueError, RuntimeError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+
+@router.get("/stations/{station_id}/explanation", response_model=SHAPExplanation)
+def station_explanation(
+    station_id: str,
+    model: str = Query("xgboost", pattern="^(random_forest|xgboost)$"),
+    database: Session = Depends(get_db),
+) -> SHAPExplanation:
+    return _station_explanation(station_id, model, database)
+
+
+@router.get("/stations/{station_id}/shap", response_model=SHAPExplanation)
+def station_shap(
+    station_id: str,
+    model: str = Query("xgboost", pattern="^(random_forest|xgboost)$"),
+    database: Session = Depends(get_db),
+) -> SHAPExplanation:
+    return _station_explanation(station_id, model, database)
 
 
 @router.get("/stations/{station_id}/analytics", response_model=StationAnalyticsSummary)

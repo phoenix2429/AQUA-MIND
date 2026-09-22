@@ -65,6 +65,26 @@ class ForecastPoint(BaseModel):
     model_version: str
 
 
+class SHAPContribution(BaseModel):
+    feature: str
+    display_name: str
+    value: float | None
+    shap_value: float
+    rank: int
+    direction: Literal["increases", "decreases", "neutral"]
+
+
+class SHAPExplanation(BaseModel):
+    station_id: str
+    model_name: Literal["random_forest", "xgboost"]
+    prediction: float
+    base_value: float
+    additivity_error: float
+    feature_schema: list[str]
+    observation_timestamp: datetime
+    contributions: list[SHAPContribution]
+
+
 class NearbyStation(StationSummary):
     distance_km: float = Field(ge=0)
 

@@ -20,9 +20,9 @@
 | GitHub Push | ✅ Complete | Changes pushed to the project branch |
 | Data Sharing (Kaggle) | 🔄 Pending Upload | Full local data remains external to the repository |
 | PostgreSQL Bulk Ingestion | 🔄 In Progress | Migrations, COPY loading, and production loading remain incomplete |
-| Tree SHAP Explainability | ⏳ Next | Start only after model target, artifacts, and comparable evaluation are verified |
+| Tree SHAP Explainability | ✅ Implemented | Local RF/XGBoost explanations, additivity checks, API endpoints, and documentation verified |
 | GSS, GBIM & DIE Analytics | ✅ Implemented | Deterministic, versioned, threshold-configurable observation-only outputs |
-| Expanded REST API | ✅ Implemented | GSS, GBIM, DIE, and combined station analytics endpoints are verified; SHAP and scenario endpoints remain pending |
+| Expanded REST API | ✅ Implemented | GSS, GBIM, DIE, SHAP, and combined station analytics endpoints are verified; scenario endpoints remain pending |
 | React / Vite Frontend | ⏳ Pending | No frontend implementation |
 | Authentication & RBAC | ⏳ Pending | JWT and role-based route protection remain pending |
 | Map, Nearby, Admin Dashboard | ⏳ Pending | Product UI and dashboard work remain pending |
