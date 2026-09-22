@@ -81,6 +81,8 @@ The current read-only API includes:
 - `GET /api/stations/{station_id}/forecast?horizon_points=&model=` (`persistence` [default], `random_forest`, `xgboost`)
 - `GET /api/stations/nearby?latitude=&longitude=&radius_km=&limit=`
 - `GET /api/models` (model listing, deployment status, and test evaluation metrics)
+- `GET /api/stations/{station_id}/analytics` (versioned GSS, GBIM, and DIE)
+- `GET /api/stations/{station_id}/gss`, `/gbim`, `/die` (individual outputs)
 
 Interactive API documentation is available at `http://127.0.0.1:8001/docs` while the server is running.
 
@@ -90,4 +92,10 @@ Interactive API documentation is available at `http://127.0.0.1:8001/docs` while
 - Actual observation timestamps determine the latest available observation.
 - Forecasting must begin after the latest actual timestamp, never after a hardcoded resource boundary.
 - Unavailable variables such as rainfall, extraction, aquifer type, or temperature are not fabricated.
-- GSS, GBIM, and recommendations will be explicitly labeled as AQUA-MIND analytical outputs, not official government standards or orders.
+- GSS, GBIM, and DIE are deterministic, versioned AQUA-MIND analytical outputs using only groundwater level, timestamp, station coordinates/elevation, and station information. Configurable sufficiency and variability thresholds are read from `AQUA_ANALYTICS_*` environment variables. Insufficient series receive no score, and outputs do not make causal claims or represent official government standards.
+
+Run the analytics batch:
+
+```powershell
+python scripts/run_analytics.py data/processed/all_states/all_observations.normalized.csv --output models/analytics.json
+```

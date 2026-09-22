@@ -122,4 +122,18 @@ The following remain intentionally unimplemented until full per-file aggregate m
 - SHAP explanations
 - GSS, GBIM, and DIE outputs
 
+## Analytical indicator audit (STEP 7)
+
+The implemented GSS, GBIM, and DIE services are deterministic and versioned
+(`1.0.0` by default). They use only parsed groundwater level and timestamp
+values, with station coordinates, elevation, and administrative station
+information retained as context. A configurable minimum observation count
+prevents scores for insufficient series. Trend, volatility, and step-change
+thresholds can be set with `AQUA_ANALYTICS_MIN_OBSERVATIONS`,
+`AQUA_ANALYTICS_DECLINE_SLOPE_M_PER_DAY`, `AQUA_ANALYTICS_VOLATILITY_M`, and
+`AQUA_ANALYTICS_JUMP_M`; `AQUA_ANALYTICS_VERSION` identifies the calculation
+contract. These are descriptive AQUA-MIND indicators, not official standards,
+causal explanations, or extraction orders. Run the reproducible batch with
+`python scripts/run_analytics.py <normalized.csv> --output <report.json>`.
+
 This prevents fabricated measurements, timestamps, metrics, explanations, and recommendations.

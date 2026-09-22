@@ -21,8 +21,8 @@
 | Data Sharing (Kaggle) | 🔄 Pending Upload | Full local data remains external to the repository |
 | PostgreSQL Bulk Ingestion | 🔄 In Progress | Migrations, COPY loading, and production loading remain incomplete |
 | Tree SHAP Explainability | ⏳ Next | Start only after model target, artifacts, and comparable evaluation are verified |
-| GSS, GBIM & DIE Analytics | ⏳ Pending | Not implemented |
-| Expanded REST API | ⏳ Pending | SHAP, GSS, GBIM, recommendations, and scenario endpoints remain pending |
+| GSS, GBIM & DIE Analytics | ✅ Implemented | Deterministic, versioned, threshold-configurable observation-only outputs |
+| Expanded REST API | ✅ Implemented | GSS, GBIM, DIE, and combined station analytics endpoints are verified; SHAP and scenario endpoints remain pending |
 | React / Vite Frontend | ⏳ Pending | No frontend implementation |
 | Authentication & RBAC | ⏳ Pending | JWT and role-based route protection remain pending |
 | Map, Nearby, Admin Dashboard | ⏳ Pending | Product UI and dashboard work remain pending |
@@ -165,6 +165,13 @@ STEP 11: Map, Scenario Analysis & Admin Dashboard
        ↓
 STEP 12: PostgreSQL bulk loading & final integration
 ```
+
+### ✅ STEP 7 — GSS, GBIM & Decision Intelligence
+- [x] Deterministic GSS stability score, GBIM behaviour profile, and DIE priority output.
+- [x] Inputs are limited to groundwater level, timestamp, coordinates/elevation, and station metadata.
+- [x] Sufficiency prevents fabricated scores; thresholds and output version are configurable with `AQUA_ANALYTICS_*`.
+- [x] API and normalized-CSV batch entry points are available.
+- [x] Outputs explicitly avoid causal claims and are labeled as AQUA-MIND analytical indicators.
 
 ---
 

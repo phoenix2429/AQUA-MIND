@@ -81,6 +81,7 @@ class AnalyticalResult(Base):
     station_id: Mapped[int] = mapped_column(ForeignKey("stations.id"), index=True)
     calculated_at: Mapped[datetime] = mapped_column(DateTime, index=True)
     result_type: Mapped[str] = mapped_column(String(32), index=True)
+    version: Mapped[str] = mapped_column(String(32), default="1.0.0")
     score: Mapped[float | None] = mapped_column(Float)
     profile: Mapped[str | None] = mapped_column(String(255))
     components: Mapped[dict[str, Any] | None] = mapped_column(JSON)

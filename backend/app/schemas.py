@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -73,3 +74,54 @@ class NearbyStationList(BaseModel):
     latitude: float
     longitude: float
     radius_km: float
+
+
+class GSSResponse(BaseModel):
+    analytics_version: str
+    result_type: str = "GSS"
+    score: float | None
+    profile: Literal["STABLE", "WATCH", "VARIABLE", "INSUFFICIENT_DATA"]
+    sufficient: bool
+    data_sufficiency: str = "INSUFFICIENT"
+    observation_count: int = 0
+    history_days: float | None = None
+    history_years: float | None = None
+    reason: str
+    components: dict
+
+
+class GBIMResponse(BaseModel):
+    analytics_version: str
+    result_type: str = "GBIM"
+    score: float | None
+    profile: Literal["STABLE", "DECLINING", "RISING", "VOLATILE", "INSUFFICIENT_DATA"]
+    sufficient: bool
+    data_sufficiency: str = "INSUFFICIENT"
+    observation_count: int = 0
+    history_days: float | None = None
+    history_years: float | None = None
+    reason: str
+    components: dict
+
+
+class RecommendationResponse(BaseModel):
+    analytics_version: str
+    result_type: str = "DIE"
+    score: float | None
+    priority: Literal["HIGH", "MEDIUM", "LOW"]
+    profile: str
+    sufficient: bool
+    recommendation: str
+    action: str | None = None
+    reason: str
+    components: dict
+    source_indicators: dict = {}
+
+
+class StationAnalyticsSummary(BaseModel):
+    station_id: str
+    station_info: dict
+    analytics_version: str
+    gss: GSSResponse
+    gbim: GBIMResponse
+    die: RecommendationResponse

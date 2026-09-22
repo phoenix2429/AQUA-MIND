@@ -13,9 +13,10 @@ from sqlalchemy.orm import Session
 from .database.models import Observation, Station
 from .database.session import get_db
 from .analytics.historical import aggregate_station_history
+from .analytics.decision import station_analytics
 from .ml.forecast_service import generate_forecast, get_available_models_info
 from .ml.persistence import persistence_forecast
-from .schemas import ForecastPoint, HistoricalPoint, NearbyStation, NearbyStationList, ObservationList, StationList, StationSummary
+from .schemas import ForecastPoint, HistoricalPoint, NearbyStation, NearbyStationList, ObservationList, StationList, StationSummary, GSSResponse, GBIMResponse, RecommendationResponse, StationAnalyticsSummary
 
 router = APIRouter(prefix="/api", tags=["telemetry"])
 
@@ -159,7 +160,48 @@ def station_forecast(
     return forecast
 
 
+@router.get("/stations/{station_id}/analytics", response_model=StationAnalyticsSummary)
+def station_decision_analytics(station_id: str, database: Session = Depends(get_db)) -> dict[str, Any]:
+    """Return versioned descriptive GSS, GBIM, and DIE outputs."""
+    station = database.scalar(select(Station).where(Station.station_id == station_id))
+    if station is None:
+        raise HTTPException(status_code=404, detail="Station was not found")
+    return station_analytics(database, station)
+
+
+@router.get("/stations/{station_id}/gss", response_model=GSSResponse)
+def station_gss(station_id: str, database: Session = Depends(get_db)) -> dict[str, Any]:
+    result = station_decision_analytics(station_id, database)
+    return result["gss"]
+
+
+@router.get("/stations/{station_id}/gbim", response_model=GBIMResponse)
+def station_gbim(station_id: str, database: Session = Depends(get_db)) -> dict[str, Any]:
+    result = station_decision_analytics(station_id, database)
+    return result["gbim"]
+
+
+@router.get("/stations/{station_id}/die", response_model=RecommendationResponse)
+def station_die(station_id: str, database: Session = Depends(get_db)) -> dict[str, Any]:
+    result = station_decision_analytics(station_id, database)
+    return result["die"]
+
+
+@router.get("/stations/{station_id}/sustainability", response_model=GSSResponse)
+def station_sustainability(station_id: str, database: Session = Depends(get_db)) -> dict[str, Any]:
+    return station_gss(station_id, database)
+
+
+@router.get("/stations/{station_id}/behavior", response_model=GBIMResponse)
+def station_behavior(station_id: str, database: Session = Depends(get_db)) -> dict[str, Any]:
+    return station_gbim(station_id, database)
+
+
+@router.get("/stations/{station_id}/recommendations", response_model=RecommendationResponse)
+def station_recommendations(station_id: str, database: Session = Depends(get_db)) -> dict[str, Any]:
+    return station_die(station_id, database)
+
+
 @router.get("/models")
 def list_models() -> list[dict[str, Any]]:
     return get_available_models_info()
-
