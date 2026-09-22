@@ -42,6 +42,7 @@ import json
 import logging
 import math
 import sys
+import tempfile
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
@@ -426,48 +427,72 @@ def main() -> int:
     # --- Stream all features ---
     rng = np.random.default_rng(42) if is_sample else None
     t0 = time.time()
-    log.info("Pass 1: streaming feature engineering …")
-
-    all_features: list[dict] = []
-    for feat in _stream_features(input_files, rng=rng, sample_frac=args.sample_frac):
-        all_features.append(feat)
-
-    n_total = len(all_features)
-    log.info("Feature rows collected: %d  (%.1f s)", n_total, time.time() - t0)
+    log.info("Pass 1: counting feature rows …")
+    n_total = sum(1 for _ in _stream_features(input_files, rng=rng, sample_frac=args.sample_frac))
+    log.info("Feature rows counted: %d  (%.1f s)", n_total, time.time() - t0)
 
     if n_total < 100:
         log.error("Too few feature rows (%d). Check input directory.", n_total)
         return 1
 
-    # --- Build arrays ---
-    log.info("Building numpy arrays (float32) …")
-    timestamps = [f["timestamp"] for f in all_features]
-    states_col = [f["state"] for f in all_features]
-    station_col = [f["station_id"] for f in all_features]
-    y_all = np.array([f["target"] for f in all_features], dtype=np.float32)
-    lag6h_all = np.array([f["lag_6h"] if f["lag_6h"] is not None else np.nan for f in all_features], dtype=np.float32)
-
-    X_all = np.empty((n_total, len(NUMERIC_FEATURE_COLS)), dtype=np.float32)
-    for j, col in enumerate(NUMERIC_FEATURE_COLS):
-        for i, feat in enumerate(all_features):
-            v = feat.get(col)
-            X_all[i, j] = v if v is not None else np.nan
-
-    del all_features  # free memory
+    # --- Build disk-backed arrays ---
+    # A Python dict per feature row exceeds available memory at full scale.
+    # Memmaps retain the full dataset while keeping the process resident set bounded.
+    log.info("Pass 2: writing disk-backed feature arrays …")
+    temp_dir = tempfile.TemporaryDirectory(prefix="aqua_mind_train_")
+    timestamps_path = Path(temp_dir.name) / "timestamps.dat"
+    states_path = Path(temp_dir.name) / "states.dat"
+    y_path = Path(temp_dir.name) / "targets.dat"
+    lag6h_path = Path(temp_dir.name) / "lag6h.dat"
+    x_path = Path(temp_dir.name) / "features.dat"
+    timestamp_values = np.memmap(timestamps_path, dtype=np.float64, mode="w+", shape=(n_total,))
+    state_values = np.memmap(states_path, dtype=np.int8, mode="w+", shape=(n_total,))
+    y_all = np.memmap(y_path, dtype=np.float32, mode="w+", shape=(n_total,))
+    lag6h_all = np.memmap(lag6h_path, dtype=np.float32, mode="w+", shape=(n_total,))
+    X_all = np.memmap(x_path, dtype=np.float32, mode="w+", shape=(n_total, len(NUMERIC_FEATURE_COLS)))
+    state_codes: dict[str, int] = {}
+    row_index = 0
+    rng = np.random.default_rng(42) if is_sample else None
+    for feat in _stream_features(input_files, rng=rng, sample_frac=args.sample_frac):
+        timestamp_values[row_index] = datetime.fromisoformat(feat["timestamp"]).timestamp()
+        state = feat["state"]
+        if state not in state_codes:
+            state_codes[state] = len(state_codes)
+        state_values[row_index] = state_codes[state]
+        y_all[row_index] = feat["target"]
+        lag6h_all[row_index] = feat["lag_6h"] if feat["lag_6h"] is not None else np.nan
+        for j, col in enumerate(NUMERIC_FEATURE_COLS):
+            value = feat.get(col)
+            X_all[row_index, j] = value if value is not None else np.nan
+        row_index += 1
+    for array in (timestamp_values, state_values, y_all, lag6h_all, X_all):
+        array.flush()
+    log.info("Feature arrays written: %d rows  (%.1f s)", row_index, time.time() - t0)
 
     # --- Chronological split ---
     log.info("Computing chronological 70/15/15 split …")
-    train_mask, val_mask, test_mask = chronological_split(timestamps)
+    order = np.argsort(timestamp_values, kind="stable")
+    train_end = int(n_total * 0.70)
+    val_end = int(n_total * 0.85)
+    train_mask = np.zeros(n_total, dtype=bool)
+    val_mask = np.zeros(n_total, dtype=bool)
+    test_mask = np.zeros(n_total, dtype=bool)
+    train_mask[order[:train_end]] = True
+    val_mask[order[train_end:val_end]] = True
+    test_mask[order[val_end:]] = True
     log.info("  Train: %d  Val: %d  Test: %d", train_mask.sum(), val_mask.sum(), test_mask.sum())
 
-    ts_sorted = sorted(timestamps)
-    date_range = (ts_sorted[0], ts_sorted[-1])
+    date_range = (
+        datetime.fromtimestamp(timestamp_values[order[0]]).isoformat(),
+        datetime.fromtimestamp(timestamp_values[order[-1]]).isoformat(),
+    )
 
     X_train, y_train = X_all[train_mask], y_all[train_mask]
     X_val, y_val = X_all[val_mask], y_all[val_mask]
     X_test, y_test = X_all[test_mask], y_all[test_mask]
     lag6h_test = lag6h_all[test_mask]
-    states_test = [states_col[i] for i in range(n_total) if test_mask[i]]
+    states_by_code = {code: state for state, code in state_codes.items()}
+    states_test = [states_by_code[int(state_values[i])] for i in np.flatnonzero(test_mask)]
 
     # --- Impute NaN with training medians ---
     log.info("Imputing NaN features with training-set medians …")
@@ -639,6 +664,8 @@ def main() -> int:
     if is_sample:
         log.info("⚠  SAMPLE RUN (%.0f%%). These are NOT full-dataset results.", args.sample_frac * 100)
 
+    del timestamp_values, state_values, y_all, lag6h_all, X_all
+    temp_dir.cleanup()
     return 0
 
 

@@ -1,7 +1,7 @@
 {
-  "run_timestamp": "2026-09-21T14:19:15.974714Z",
-  "is_sample_run": true,
-  "sample_frac": 0.05,
+  "run_timestamp": "2026-09-22T09:26:43.332936Z",
+  "is_sample_run": false,
+  "sample_frac": 1.0,
   "dataset": {
     "input_files": [
       "gwl_tel_6_hourly_andhra_pradesh_gw_ap_2021_2025.quality_filtered.csv",
@@ -15,12 +15,12 @@
       "gwl_tel_6_hourly_telangana_gw_ts_2021_2025.quality_filtered.csv",
       "gwl_tel_6_hourly_telangana_gw_ts_2026_2030.quality_filtered.csv"
     ],
-    "total_feature_rows": 1060499,
-    "train_rows": 742349,
-    "val_rows": 159075,
-    "test_rows": 159075,
+    "total_feature_rows": 21502736,
+    "train_rows": 15051915,
+    "val_rows": 3225410,
+    "test_rows": 3225411,
     "date_range": {
-      "start": "2021-01-01T00:24:00",
+      "start": "2021-01-01T00:01:00",
       "end": "2026-09-18T21:00:00"
     },
     "features": [
@@ -54,12 +54,12 @@
     "persistence": {
       "description": "Next value = last observed (lag_6h). Rows without lag_6h excluded.",
       "test_metrics": {
-        "n": 7430,
-        "mae": 0.607264,
-        "rmse": 3.778346,
-        "r2": 0.972034
+        "n": 3154474,
+        "mae": 0.615484,
+        "rmse": 4.060324,
+        "r2": 0.962951
       },
-      "test_n_evaluated": 7430
+      "test_n_evaluated": 3154474
     },
     "random_forest": {
       "version": "1.0",
@@ -72,47 +72,47 @@
         "random_state": 42
       },
       "validation_metrics": {
-        "n": 159075,
-        "mae": 7.168076,
-        "rmse": 13.967357,
-        "r2": 0.516721
+        "n": 3225410,
+        "mae": 0.669079,
+        "rmse": 3.845496,
+        "r2": 0.963155
       },
       "test_metrics": {
-        "n": 159075,
-        "mae": 7.88731,
-        "rmse": 15.26068,
-        "r2": 0.482512
+        "n": 3225411,
+        "mae": 0.62013,
+        "rmse": 3.33632,
+        "r2": 0.975177
       },
       "per_state_test_metrics": {
         "Andhra Pradesh": {
-          "n": 12146,
-          "mae": 4.427266,
-          "rmse": 9.978798,
-          "r2": 0.415218
+          "n": 253372,
+          "mae": 0.283755,
+          "rmse": 2.891709,
+          "r2": 0.952542
         },
         "Karnataka": {
-          "n": 49589,
-          "mae": 12.930735,
-          "rmse": 23.10466,
-          "r2": 0.486311
+          "n": 1002445,
+          "mae": 1.121613,
+          "rmse": 4.922927,
+          "r2": 0.97655
         },
         "Maharashtra": {
-          "n": 40899,
-          "mae": 6.824954,
-          "rmse": 10.949023,
-          "r2": 0.307156
+          "n": 834001,
+          "mae": 0.481421,
+          "rmse": 1.920565,
+          "r2": 0.978785
         },
         "Tamil Nadu": {
-          "n": 30791,
-          "mae": 5.07404,
-          "rmse": 9.256341,
-          "r2": 0.476461
+          "n": 619790,
+          "mae": 0.283011,
+          "rmse": 2.14575,
+          "r2": 0.972381
         },
         "Telangana": {
-          "n": 25650,
-          "mae": 4.846374,
-          "rmse": 8.433237,
-          "r2": 0.197826
+          "n": 515803,
+          "mae": 0.440109,
+          "rmse": 2.626794,
+          "r2": 0.920234
         }
       },
       "artifact_dir": "models\\random_forest",
@@ -139,47 +139,47 @@
         "eval_metric": "rmse"
       },
       "validation_metrics": {
-        "n": 159075,
-        "mae": 7.08887,
-        "rmse": 13.739479,
-        "r2": 0.532361
+        "n": 3225410,
+        "mae": 0.833605,
+        "rmse": 4.141136,
+        "r2": 0.957272
       },
       "test_metrics": {
-        "n": 159075,
-        "mae": 7.859135,
-        "rmse": 15.122334,
-        "r2": 0.491852
+        "n": 3225411,
+        "mae": 0.825719,
+        "rmse": 3.883306,
+        "r2": 0.96637
       },
       "per_state_test_metrics": {
         "Andhra Pradesh": {
-          "n": 12146,
-          "mae": 3.998713,
-          "rmse": 9.044111,
-          "r2": 0.519637
+          "n": 253372,
+          "mae": 0.324205,
+          "rmse": 2.908688,
+          "r2": 0.951983
         },
         "Karnataka": {
-          "n": 49589,
-          "mae": 13.209802,
-          "rmse": 23.160369,
-          "r2": 0.483831
+          "n": 1002445,
+          "mae": 1.614998,
+          "rmse": 6.023456,
+          "r2": 0.964894
         },
         "Maharashtra": {
-          "n": 40899,
-          "mae": 6.542253,
-          "rmse": 10.575489,
-          "r2": 0.353623
+          "n": 834001,
+          "mae": 0.57319,
+          "rmse": 2.013788,
+          "r2": 0.976676
         },
         "Tamil Nadu": {
-          "n": 30791,
-          "mae": 5.262515,
-          "rmse": 9.263801,
-          "r2": 0.475617
+          "n": 619790,
+          "mae": 0.366962,
+          "rmse": 2.223729,
+          "r2": 0.970337
         },
         "Telangana": {
-          "n": 25650,
-          "mae": 4.559571,
-          "rmse": 7.819331,
-          "r2": 0.310365
+          "n": 515803,
+          "mae": 0.497694,
+          "rmse": 2.670333,
+          "r2": 0.917568
         }
       },
       "artifact_dir": "models\\xgboost",

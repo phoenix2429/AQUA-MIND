@@ -1,7 +1,7 @@
 {
   "model_name": "Random Forest",
   "version": "1.0",
-  "training_timestamp": "2026-09-21T14:18:43.796881Z",
+  "training_timestamp": "2026-09-22T09:20:26.326656Z",
   "target": "groundwater_level_next_step",
   "target_description": "Groundwater level at observation t+1 (next 6-hour reading for same station)",
   "feature_names": [
@@ -32,11 +32,11 @@
     "random_state": 42
   },
   "split_methodology": "Global chronological: oldest 70% train, next 15% val, newest 15% test",
-  "training_observations": 742349,
-  "validation_observations": 159075,
-  "test_observations": 159075,
+  "training_observations": 15051915,
+  "validation_observations": 3225410,
+  "test_observations": 3225411,
   "training_date_range": {
-    "start": "2021-01-01T00:24:00",
+    "start": "2021-01-01T00:01:00",
     "end": "2026-09-18T21:00:00"
   },
   "random_seed": 42,
@@ -48,34 +48,34 @@
   },
   "evaluation_metrics": {
     "validation": {
-      "n": 159075,
-      "mae": 7.168076,
-      "rmse": 13.967357,
-      "r2": 0.516721
+      "n": 3225410,
+      "mae": 0.669079,
+      "rmse": 3.845496,
+      "r2": 0.963155
     },
     "test": {
-      "n": 159075,
-      "mae": 7.88731,
-      "rmse": 15.26068,
-      "r2": 0.482512
+      "n": 3225411,
+      "mae": 0.62013,
+      "rmse": 3.33632,
+      "r2": 0.975177
     }
   },
   "feature_importances": {
-    "lag_6h": 0.048934644580919964,
-    "lag_12h": 0.04224401847131372,
-    "lag_24h": 0.03805936177832823,
-    "lag_48h": 0.030480209375854717,
-    "lag_7d": 0.025343526445722474,
-    "rolling_mean_7d": 0.003921094919222808,
-    "rolling_std_7d": 7.698076268590948e-05,
-    "rolling_mean_30d": 0.2111114501156788,
-    "trend_7d": 0.0001226455582812603,
-    "hour": 0.0013973396928461496,
-    "day_of_year": 0.01471823066494473,
-    "month": 0.006204525303893222,
-    "season": 0.002575180928610386,
-    "latitude": 0.1882882873518774,
-    "longitude": 0.27270327645707587,
-    "elevation_msl": 0.1138192275927444
+    "lag_6h": 0.15937719474601,
+    "lag_12h": 0.08172098616229903,
+    "lag_24h": 0.041346011956574474,
+    "lag_48h": 0.019597610651008932,
+    "lag_7d": 0.008443928565443654,
+    "rolling_mean_7d": 0.48421493804409105,
+    "rolling_std_7d": 0.0019606434083146913,
+    "rolling_mean_30d": 0.19866153266309877,
+    "trend_7d": 0.0021034153448214873,
+    "hour": 0.0003390731011685306,
+    "day_of_year": 0.0005848892028062262,
+    "month": 0.00015940869506158656,
+    "season": 8.629782035755125e-05,
+    "latitude": 0.000617227018457259,
+    "longitude": 0.0005851911820914768,
+    "elevation_msl": 0.00020165143839531648
   }
 }

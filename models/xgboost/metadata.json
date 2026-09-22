@@ -1,7 +1,7 @@
 {
   "model_name": "XGBoost",
   "version": "1.0",
-  "training_timestamp": "2026-09-21T14:19:15.963278Z",
+  "training_timestamp": "2026-09-22T09:26:43.319440Z",
   "target": "groundwater_level_next_step",
   "target_description": "Groundwater level at observation t+1 (next 6-hour reading for same station)",
   "feature_names": [
@@ -37,11 +37,11 @@
     "eval_metric": "rmse"
   },
   "split_methodology": "Global chronological: oldest 70% train, next 15% val, newest 15% test",
-  "training_observations": 742349,
-  "validation_observations": 159075,
-  "test_observations": 159075,
+  "training_observations": 15051915,
+  "validation_observations": 3225410,
+  "test_observations": 3225411,
   "training_date_range": {
-    "start": "2021-01-01T00:24:00",
+    "start": "2021-01-01T00:01:00",
     "end": "2026-09-18T21:00:00"
   },
   "random_seed": 42,
@@ -53,34 +53,34 @@
   },
   "evaluation_metrics": {
     "validation": {
-      "n": 159075,
-      "mae": 7.08887,
-      "rmse": 13.739479,
-      "r2": 0.532361
+      "n": 3225410,
+      "mae": 0.833605,
+      "rmse": 4.141136,
+      "r2": 0.957272
     },
     "test": {
-      "n": 159075,
-      "mae": 7.859135,
-      "rmse": 15.122334,
-      "r2": 0.491852
+      "n": 3225411,
+      "mae": 0.825719,
+      "rmse": 3.883306,
+      "r2": 0.96637
     }
   },
   "feature_importances": {
-    "lag_6h": 0.1336662620306015,
-    "lag_12h": 0.11434261500835419,
-    "lag_24h": 0.11445043981075287,
-    "lag_48h": 0.10719127953052521,
-    "lag_7d": 0.11006247252225876,
-    "rolling_mean_7d": 0.03634867072105408,
-    "rolling_std_7d": 0.003725628601387143,
-    "rolling_mean_30d": 0.12599128484725952,
-    "trend_7d": 0.003707942785695195,
-    "hour": 0.006697189994156361,
-    "day_of_year": 0.00983823649585247,
-    "month": 0.011348086409270763,
-    "season": 0.006283032242208719,
-    "latitude": 0.07668166607618332,
-    "longitude": 0.07810331135988235,
-    "elevation_msl": 0.06156181916594505
+    "lag_6h": 0.08412972837686539,
+    "lag_12h": 0.02097829431295395,
+    "lag_24h": 0.008860289119184017,
+    "lag_48h": 0.00411895290017128,
+    "lag_7d": 0.0016552212182432413,
+    "rolling_mean_7d": 0.724628746509552,
+    "rolling_std_7d": 0.0026413272134959698,
+    "rolling_mean_30d": 0.13286657631397247,
+    "trend_7d": 0.0019465129589661956,
+    "hour": 0.000914603122510016,
+    "day_of_year": 0.0011897793738171458,
+    "month": 0.001042015734128654,
+    "season": 0.0012163873761892319,
+    "latitude": 0.005031203851103783,
+    "longitude": 0.0038738823495805264,
+    "elevation_msl": 0.004906502552330494
   }
 }
