@@ -23,3 +23,12 @@ data/**/*.log
 models/random_forest/model.joblib
 models/xgboost/model.joblib
 models/*.joblib
+
+# Frontend dependencies and build output
+frontend/node_modules/
+frontend/dist/
+
+# Frontend local environment
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local

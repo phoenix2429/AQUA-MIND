@@ -143,7 +143,7 @@ def copy_dataset(source_data: Path, target_data: Path) -> None:
 
 def download_archive(dataset: str, destination: Path) -> Path:
     archive = destination / "dataset.zip"
-    command = ["kaggle", "datasets", "download", "-d", dataset, "-p", str(destination), "-q"]
+    command = [sys.executable, "-m", "kaggle", "datasets", "download", "-d", dataset, "-p", str(destination), "-q"]
     try:
         subprocess.run(command, check=True, capture_output=True, text=True)
     except FileNotFoundError as exc:
