@@ -23,3 +23,5 @@ data/**/*.log
 models/random_forest/model.joblib
 models/xgboost/model.joblib
 models/*.joblib
+
+frontend/node_modules/
