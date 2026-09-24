@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import math
 import sys
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -148,6 +149,13 @@ class TestImputation:
         X_test = np.array([[np.nan, 3.0]], dtype=np.float32)
         _, _, X_test_imp, m = impute_with_median(X_train, X_train.copy(), X_test)
         assert X_test_imp[0, 0] == pytest.approx(0.0)
+
+    def test_all_nan_column_does_not_warn(self):
+        X_train = np.array([[np.nan, 1.0], [np.nan, 2.0]], dtype=np.float32)
+        with warnings.catch_warnings(record=True) as recorded:
+            warnings.simplefilter("always")
+            impute_with_median(X_train, X_train.copy(), X_train.copy())
+        assert not recorded
 
 
 # ================================================================

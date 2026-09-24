@@ -89,15 +89,7 @@ def nearby_stations(
     return NearbyStationList(items=nearby[:limit], latitude=latitude, longitude=longitude, radius_km=radius_km)
 
 
-@router.get("/stations/{station_id}", response_model=StationSummary)
-def get_station(station_id: str, database: Session = Depends(get_db)) -> Station:
-    station = database.scalar(select(Station).where(Station.station_id == station_id))
-    if station is None:
-        raise HTTPException(status_code=404, detail="Station was not found")
-    return station
-
-
-@router.get("/stations/{station_id}/observations", response_model=ObservationList)
+@router.get("/stations/{station_id:path}/observations", response_model=ObservationList)
 def list_observations(
     station_id: str,
     start: datetime | None = None,
@@ -106,6 +98,8 @@ def list_observations(
     page_size: int = Query(500, ge=1, le=2000),
     database: Session = Depends(get_db),
 ) -> ObservationList:
+    if start and end and start > end:
+        raise HTTPException(status_code=422, detail="start must not be after end")
     station = database.scalar(select(Station).where(Station.station_id == station_id))
     if station is None:
         raise HTTPException(status_code=404, detail="Station was not found")
@@ -125,7 +119,7 @@ def list_observations(
     return ObservationList(items=items, total=total, page=page, page_size=page_size)
 
 
-@router.get("/stations/{station_id}/history", response_model=list[HistoricalPoint])
+@router.get("/stations/{station_id:path}/history", response_model=list[HistoricalPoint])
 def station_history(
     station_id: str,
     start: datetime | None = None,
@@ -133,13 +127,15 @@ def station_history(
     buckets: int = Query(500, ge=1, le=2000),
     database: Session = Depends(get_db),
 ) -> list[HistoricalPoint]:
+    if start and end and start > end:
+        raise HTTPException(status_code=422, detail="start must not be after end")
     station = database.scalar(select(Station).where(Station.station_id == station_id))
     if station is None:
         raise HTTPException(status_code=404, detail="Station was not found")
     return aggregate_station_history(database, station.id, start=start, end=end, buckets=buckets)
 
 
-@router.get("/stations/{station_id}/forecast", response_model=list[ForecastPoint])
+@router.get("/stations/{station_id:path}/forecast", response_model=list[ForecastPoint])
 def station_forecast(
     station_id: str,
     horizon_points: int = Query(4, ge=1, le=24),
@@ -173,7 +169,7 @@ def _station_explanation(station_id: str, model: str, database: Session) -> SHAP
         raise HTTPException(status_code=422, detail=str(exc))
 
 
-@router.get("/stations/{station_id}/explanation", response_model=SHAPExplanation)
+@router.get("/stations/{station_id:path}/explanation", response_model=SHAPExplanation)
 def station_explanation(
     station_id: str,
     model: str = Query("xgboost", pattern="^(random_forest|xgboost)$"),
@@ -182,7 +178,7 @@ def station_explanation(
     return _station_explanation(station_id, model, database)
 
 
-@router.get("/stations/{station_id}/shap", response_model=SHAPExplanation)
+@router.get("/stations/{station_id:path}/shap", response_model=SHAPExplanation)
 def station_shap(
     station_id: str,
     model: str = Query("xgboost", pattern="^(random_forest|xgboost)$"),
@@ -191,7 +187,7 @@ def station_shap(
     return _station_explanation(station_id, model, database)
 
 
-@router.get("/stations/{station_id}/analytics", response_model=StationAnalyticsSummary)
+@router.get("/stations/{station_id:path}/analytics", response_model=StationAnalyticsSummary)
 def station_decision_analytics(station_id: str, database: Session = Depends(get_db)) -> dict[str, Any]:
     """Return versioned descriptive GSS, GBIM, and DIE outputs."""
     station = database.scalar(select(Station).where(Station.station_id == station_id))
@@ -200,37 +196,45 @@ def station_decision_analytics(station_id: str, database: Session = Depends(get_
     return station_analytics(database, station)
 
 
-@router.get("/stations/{station_id}/gss", response_model=GSSResponse)
+@router.get("/stations/{station_id:path}/gss", response_model=GSSResponse)
 def station_gss(station_id: str, database: Session = Depends(get_db)) -> dict[str, Any]:
     result = station_decision_analytics(station_id, database)
     return result["gss"]
 
 
-@router.get("/stations/{station_id}/gbim", response_model=GBIMResponse)
+@router.get("/stations/{station_id:path}/gbim", response_model=GBIMResponse)
 def station_gbim(station_id: str, database: Session = Depends(get_db)) -> dict[str, Any]:
     result = station_decision_analytics(station_id, database)
     return result["gbim"]
 
 
-@router.get("/stations/{station_id}/die", response_model=RecommendationResponse)
+@router.get("/stations/{station_id:path}/die", response_model=RecommendationResponse)
 def station_die(station_id: str, database: Session = Depends(get_db)) -> dict[str, Any]:
     result = station_decision_analytics(station_id, database)
     return result["die"]
 
 
-@router.get("/stations/{station_id}/sustainability", response_model=GSSResponse)
+@router.get("/stations/{station_id:path}/sustainability", response_model=GSSResponse)
 def station_sustainability(station_id: str, database: Session = Depends(get_db)) -> dict[str, Any]:
     return station_gss(station_id, database)
 
 
-@router.get("/stations/{station_id}/behavior", response_model=GBIMResponse)
+@router.get("/stations/{station_id:path}/behavior", response_model=GBIMResponse)
 def station_behavior(station_id: str, database: Session = Depends(get_db)) -> dict[str, Any]:
     return station_gbim(station_id, database)
 
 
-@router.get("/stations/{station_id}/recommendations", response_model=RecommendationResponse)
+@router.get("/stations/{station_id:path}/recommendations", response_model=RecommendationResponse)
 def station_recommendations(station_id: str, database: Session = Depends(get_db)) -> dict[str, Any]:
     return station_die(station_id, database)
+
+
+@router.get("/stations/{station_id:path}", response_model=StationSummary)
+def get_station(station_id: str, database: Session = Depends(get_db)) -> Station:
+    station = database.scalar(select(Station).where(Station.station_id == station_id))
+    if station is None:
+        raise HTTPException(status_code=404, detail="Station was not found")
+    return station
 
 
 @router.get("/models")

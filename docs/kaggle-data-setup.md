@@ -37,3 +37,18 @@ The repository's current working copy was checked on 2026-09-22. The Kaggle
 CLI was not installed in that environment, so a live listing/download could
 not be performed; authentication and dataset accessibility must be verified
 on the machine running setup.
+
+## Models and database
+
+After the dataset is installed, `python scripts/setup_models.py` verifies that
+both joblib artifacts, feature schemas, metadata, and finite predictions are
+real loadable models. To reproduce them from the processed files, run
+`python scripts/setup_models.py --train` (or use a smaller deterministic
+`--sample-frac` for development); this invokes `train_models.py` and never
+creates fake models or requires secrets.
+
+`python scripts/setup_database.py` initializes the existing SQLAlchemy schema
+and loads `all_observations.normalized.csv` plus `stations_all_states.csv`.
+Loading is additive and idempotent, so rerunning it does not delete or
+duplicate rows. The source CSVs are large; expect a full import to take
+substantial time and use PostgreSQL for production-scale data.

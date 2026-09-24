@@ -20,7 +20,7 @@ def make_client() -> TestClient:
     session_factory = sessionmaker(bind=engine)
     session = session_factory()
     station = Station(station_id="A", station_name="Station A", state="Telangana", district="Demo", agency="NWDP", source="NWDP", source_file="raw.csv", latitude=17.0, longitude=78.0, observation_count=2, latest_observation_timestamp=datetime(2026, 1, 1, 6))
-    second = Station(station_id="B", station_name="Station B", state="Telangana", district="Other", agency="NWDP", source="NWDP", source_file="raw.csv", latitude=18.0, longitude=79.0, observation_count=1, latest_observation_timestamp=datetime(2026, 1, 1))
+    second = Station(station_id="B/1", station_name="Station B", state="Telangana", district="Other", agency="NWDP", source="NWDP", source_file="raw.csv", latitude=18.0, longitude=79.0, observation_count=1, latest_observation_timestamp=datetime(2026, 1, 1))
     session.add_all([station, second])
     session.flush()
     session.add_all([
@@ -55,9 +55,26 @@ def test_observations_and_nearby_search() -> None:
     assert nearby.json()["items"][0]["distance_km"] == 0
 
 
+def test_observation_and_history_reject_reversed_dates() -> None:
+    client = make_client()
+    assert client.get(
+        "/api/stations/A/observations?start=2026-01-02T00:00:00&end=2026-01-01T00:00:00"
+    ).status_code == 422
+    assert client.get(
+        "/api/stations/A/history?start=2026-01-02T00:00:00&end=2026-01-01T00:00:00"
+    ).status_code == 422
+
+
 def test_unknown_station_returns_404() -> None:
     client = make_client()
     assert client.get("/api/stations/missing").status_code == 404
+
+
+def test_station_ids_with_slashes_are_supported() -> None:
+    client = make_client()
+    response = client.get("/api/stations/B%2F1")
+    assert response.status_code == 200
+    assert response.json()["station_id"] == "B/1"
 
 
 def test_forecast_persistence_default() -> None:
@@ -104,4 +121,3 @@ def test_list_models_endpoint() -> None:
     assert "persistence" in names
     assert "random_forest" in names
     assert "xgboost" in names
-
