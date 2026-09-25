@@ -65,6 +65,25 @@ python scripts/train_models.py --sample-frac 0.05
 python scripts/train_models.py
 ```
 
+Verify the checked-in, loadable model artifacts (no placeholder models are
+generated):
+
+```powershell
+python scripts/setup_models.py
+# Rebuild deterministically from processed data instead:
+python scripts/setup_models.py --train --sample-frac 0.05
+```
+
+Initialize and load the canonical processed station/observation data
+idempotently:
+
+```powershell
+python scripts/setup_database.py
+```
+
+Repeated loads retain existing rows. A destructive rebuild requires the
+explicit `--replace` option on `scripts/load_database.py`.
+
 Run the backend API locally:
 
 ```powershell

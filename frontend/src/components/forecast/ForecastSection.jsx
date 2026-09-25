@@ -134,7 +134,7 @@ export function ForecastSection({ stationId }) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
           {forecastPoints.map((pt, index) => (
-            <div 
+            <div
               key={index}
               className="p-4 bg-gradient-to-b from-white to-blue-50/30 border border-blue-100 rounded-xl shadow-2xs space-y-2 hover:border-blue-300 transition-colors"
             >

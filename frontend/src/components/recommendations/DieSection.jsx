@@ -5,7 +5,7 @@ export function DieSection({ die }) {
   if (!die) return null;
 
   const priority = die.priority || 'LOW';
-  
+
   const priorityStyles = {
     HIGH: {
       bg: 'bg-rose-50 border-rose-200 text-rose-950',

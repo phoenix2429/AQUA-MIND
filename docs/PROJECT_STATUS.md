@@ -113,6 +113,39 @@ Validation: 3,225,410
 Test: 3,225,411
 ```
 
+## Current local integration status
+
+### Completed
+
+- React/Vite frontend is connected to the FastAPI APIs and supports five-state station discovery.
+- SQLite contains 5,426 stations and 21,667,754 unique observations. The canonical merged file contains 3,407 duplicate station/timestamp rows; the database unique constraint removes them deterministically.
+- SQLite integrity is `ok`, with no orphan observations or duplicate station/timestamp pairs.
+- Station routes safely encode IDs containing `/`, spaces, and `:`.
+- Backend tests pass 105 tests; frontend service tests pass 5 tests; the production build succeeds.
+- GSS, GBIM, and DIE are available dynamically from measured telemetry.
+- Farmer advisory cards use real station history, forecast, and analytical indicators; recommendations are explicitly advisory.
+- `/api/admin/health` reports database counts, latest observation time, freshness, and pipeline state.
+- `/api/regional/summary` reports five-state regional and filtered state/district telemetry summaries.
+
+### Partial
+
+- Persisted GSS/GBIM/recommendation rows have been generated for Telangana; regional endpoint calculations work for all five states.
+- Reports export the first 500 observations for a selected station.
+
+## Remaining Work
+
+- Authentication and RBAC are not implemented; role switching is presentation-only.
+- Scenario analysis remains an explicitly synthetic demonstration page.
+- Government station comparison and full regional GSS/GBIM distribution visualizations are not implemented.
+- Persisted analytics have not been batch-generated for all five states.
+- Live Kaggle download was not verified; local validation is available through `scripts/setup_kaggle_data.py --dry-run`.
+
+## Known limitations
+
+- SQLite is the current development database and nearby-station lookup scans stations in application code.
+- Farmer crop and irrigation guidance is deterministic telemetry-based advisory logic, not a validated agronomic model.
+- Browser-level visual testing was not performed; API, frontend tests, and production build were verified.
+
 | Model | Test rows | MAE | RMSE | R² |
 |---|---:|---:|---:|---:|
 | Persistence | 3,154,474 | 0.615484 | 4.060324 | 0.962951 |

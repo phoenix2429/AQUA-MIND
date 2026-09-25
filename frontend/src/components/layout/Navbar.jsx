@@ -41,7 +41,7 @@ export function Navbar({ onToggleSidebar }) {
   return (
     <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-2xs">
       <div className="flex items-center justify-between h-16 px-4 md:px-6 max-w-7xl mx-auto">
-        
+
         {/* Left: Mobile Drawer Button & Branding */}
         <div className="flex items-center space-x-3">
           <button
@@ -86,13 +86,13 @@ export function Navbar({ onToggleSidebar }) {
 
         {/* Right: API Health & Stakeholder Role Selector */}
         <div className="flex items-center space-x-3">
-          
+
           {/* Health Pill */}
-          <div 
+          <div
             className={`hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
-              backendStatus === 'ok' 
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-                : backendStatus === 'offline' 
+              backendStatus === 'ok'
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : backendStatus === 'offline'
                 ? 'bg-rose-50 text-rose-700 border-rose-200'
                 : 'bg-amber-50 text-amber-700 border-amber-200'
             }`}

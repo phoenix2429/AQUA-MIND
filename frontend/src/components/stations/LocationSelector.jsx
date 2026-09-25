@@ -1,16 +1,16 @@
 import React from 'react';
 import { Map, Filter, RefreshCcw } from 'lucide-react';
 
-export function LocationSelector({ 
-  states, 
-  districts, 
-  selectedState, 
-  selectedDistrict, 
-  onSelectState, 
+export function LocationSelector({
+  states,
+  districts,
+  selectedState,
+  selectedDistrict,
+  onSelectState,
   onSelectDistrict,
   onResetFilters,
   loadingStates,
-  loadingDistricts 
+  loadingDistricts
 }) {
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs space-y-4">
@@ -63,10 +63,10 @@ export function LocationSelector({
             className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <option value="">
-              {!selectedState 
-                ? 'Select a state first' 
-                : loadingDistricts 
-                ? 'Loading districts...' 
+              {!selectedState
+                ? 'Select a state first'
+                : loadingDistricts
+                ? 'Loading districts...'
                 : `All Districts in ${selectedState} (${districts.length})`}
             </option>
             {districts.map((district) => (

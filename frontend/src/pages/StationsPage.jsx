@@ -10,32 +10,36 @@ import { ErrorMessage } from '../components/common/ErrorMessage';
 
 export function StationsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   const [states, setStates] = useState([]);
   const [districts, setDistricts] = useState([]);
-  
+
   const [selectedState, setSelectedState] = useState(searchParams.get('state') || null);
   const [selectedDistrict, setSelectedDistrict] = useState(searchParams.get('district') || null);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-  
+
   const [page, setPage] = useState(parseInt(searchParams.get('page') || '1', 10));
   const pageSize = 24;
 
   const [loadingStates, setLoadingStates] = useState(true);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
   const [loadingStations, setLoadingStations] = useState(true);
-  
+
   const [stationsData, setStationsData] = useState({ items: [], total: 0, page: 1, page_size: pageSize });
   const [error, setError] = useState(null);
+  const [stateError, setStateError] = useState(null);
+  const [districtError, setDistrictError] = useState(null);
 
   // Load States on mount
   useEffect(() => {
     async function loadStates() {
       try {
         setLoadingStates(true);
+        setStateError(null);
         const data = await stationService.getStates();
         setStates(data || []);
       } catch (err) {
+        setStateError('Unable to load states from the backend.');
         console.error('Failed to load states:', err);
       } finally {
         setLoadingStates(false);
@@ -55,9 +59,11 @@ export function StationsPage() {
     async function loadDistricts() {
       try {
         setLoadingDistricts(true);
+        setDistrictError(null);
         const data = await stationService.getDistricts(selectedState);
         setDistricts(data || []);
       } catch (err) {
+        setDistrictError('Unable to load districts for the selected state.');
         console.error('Failed to load districts:', err);
       } finally {
         setLoadingDistricts(false);
@@ -124,7 +130,7 @@ export function StationsPage() {
 
   return (
     <div className="space-y-6">
-      
+
       {/* Title & Overview Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -165,6 +171,8 @@ export function StationsPage() {
         loadingStates={loadingStates}
         loadingDistricts={loadingDistricts}
       />
+      {stateError && <ErrorMessage title="State Filter Unavailable" message={stateError} />}
+      {districtError && <ErrorMessage title="District Filter Unavailable" message={districtError} />}
 
       {/* Main Content Area */}
       {error ? (
@@ -195,7 +203,7 @@ export function StationsPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          
+
           {/* Header Count */}
           <div className="flex items-center justify-between text-xs text-slate-500 px-1">
             <span>

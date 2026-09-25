@@ -25,16 +25,15 @@ export function MapPage() {
 
   useEffect(() => {
     async function fetchMapStations() {
+      if (!selectedState && states.length === 0) {
+        return;
+      }
       try {
         setLoading(true);
         setError(null);
-        const response = await stationService.getStations({
-          state: selectedState || undefined,
-          page: 1,
-          pageSize: 200,
-        });
-
-        const items = response?.items || [];
+        const items = selectedState
+          ? await stationService.getAllStations([selectedState])
+          : await stationService.getAllStations(states);
         setStations(items);
 
         // Compute dynamic center if valid stations exist
@@ -51,7 +50,7 @@ export function MapPage() {
       }
     }
     fetchMapStations();
-  }, [selectedState]);
+  }, [selectedState, states]);
 
   return (
     <div className="space-y-6">

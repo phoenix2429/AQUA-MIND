@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  ResponsiveContainer, 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  Tooltip, 
-  CartesianGrid 
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid
 } from 'recharts';
 import { Calendar, RefreshCw, AlertCircle, LineChart as ChartIcon } from 'lucide-react';
 import { stationService } from '../../services/stationService';
@@ -101,8 +101,8 @@ export function HistoryChart({ stationId }) {
               key={r.id}
               onClick={() => setTimeRange(r.id)}
               className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${
-                timeRange === r.id 
-                  ? 'bg-white text-brand-700 shadow-2xs' 
+                timeRange === r.id
+                  ? 'bg-white text-brand-700 shadow-2xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -129,13 +129,13 @@ export function HistoryChart({ stationId }) {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={historyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-              <XAxis 
-                dataKey="formattedDate" 
+              <XAxis
+                dataKey="formattedDate"
                 tick={{ fontSize: 11, fill: '#64748b' }}
                 tickLine={false}
                 axisLine={{ stroke: '#cbd5e1' }}
               />
-              <YAxis 
+              <YAxis
                 tick={{ fontSize: 11, fill: '#64748b' }}
                 tickLine={false}
                 axisLine={false}
@@ -161,10 +161,10 @@ export function HistoryChart({ stationId }) {
                   return null;
                 }}
               />
-              <Line 
-                type="monotone" 
-                dataKey="level" 
-                stroke="#0284c7" 
+              <Line
+                type="monotone"
+                dataKey="level"
+                stroke="#0284c7"
                 strokeWidth={2.5}
                 dot={historyData.length < 30 ? { r: 3, fill: '#0284c7' } : false}
                 activeDot={{ r: 5, fill: '#0369a1', stroke: '#ffffff', strokeWidth: 2 }}

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  BarChart2, 
-  TrendingUp, 
-  Lightbulb, 
-  Shield, 
-  Activity, 
+import {
+  ArrowLeft,
+  BarChart2,
+  TrendingUp,
+  Lightbulb,
+  Shield,
+  Activity,
   FileText,
   Clock,
   Radio,
@@ -33,7 +33,7 @@ export function StationAnalysisPage() {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // Tab Navigation State
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'history' | 'forecast' | 'shap' | 'gss_gbim' | 'die'
 
@@ -97,7 +97,7 @@ export function StationAnalysisPage() {
 
   return (
     <div className="space-y-6">
-      
+
       {/* Top Back Nav Button */}
       <div className="flex items-center justify-between">
         <Link
@@ -127,8 +127,8 @@ export function StationAnalysisPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`
                 flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex-shrink-0
-                ${isActive 
-                  ? `${roleInfo.theme.primary} shadow-2xs` 
+                ${isActive
+                  ? `${roleInfo.theme.primary} shadow-2xs`
                   : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900'}
               `}
             >
@@ -141,7 +141,7 @@ export function StationAnalysisPage() {
 
       {/* 3. Tab Content Panels */}
       <div className="space-y-6">
-        
+
         {/* OVERVIEW TAB */}
         {activeTab === 'overview' && (
           <div className="space-y-6 animate-in fade-in duration-200">

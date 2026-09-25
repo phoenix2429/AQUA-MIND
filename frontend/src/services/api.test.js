@@ -3,8 +3,15 @@ import { api, ApiError } from './api';
 import { stationService } from './stationService';
 import { forecastService } from './forecastService';
 import { analyticsService } from './analyticsService';
+import { stationRoute } from './stationRoutes';
 
 describe('AQUA-MIND Frontend API Service Layer', () => {
+  it('encodes station IDs used in frontend routes', () => {
+    expect(stationRoute('Andhra Pradesh::33/11 KV substation')).toBe(
+      '/stations/Andhra%20Pradesh%3A%3A33%2F11%20KV%20substation'
+    );
+  });
+
   it('constructs correct query params for station search', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,

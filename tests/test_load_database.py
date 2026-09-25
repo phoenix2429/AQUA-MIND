@@ -33,3 +33,11 @@ def test_load_database_imports_canonical_files(tmp_path: Path, monkeypatch) -> N
     assert session.query(Station).count() == 1
     assert session.query(Observation).count() == 1
     session.close()
+
+    # A repeated setup must retain data and must not create duplicates.
+    result = load_database.load_csv(observations, stations)
+    assert result == {"stations": 1, "observations": 0}
+    session = sessionmaker(bind=engine)()
+    assert session.query(Station).count() == 1
+    assert session.query(Observation).count() == 1
+    session.close()

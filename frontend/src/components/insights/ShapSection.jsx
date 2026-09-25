@@ -98,7 +98,7 @@ export function ShapSection({ stationId }) {
         </div>
       ) : (
         <div className="space-y-4 pt-2">
-          
+
           {/* Base Value & Prediction Info */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs">
             <div>
@@ -151,7 +151,7 @@ export function ShapSection({ stationId }) {
 
                   {/* Horizontal Bar */}
                   <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden flex">
-                    <div 
+                    <div
                       className={`h-full rounded-full transition-all duration-300 ${
                         isPositive ? 'bg-rose-500' : 'bg-emerald-500'
                       }`}

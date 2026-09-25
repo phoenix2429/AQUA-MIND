@@ -16,7 +16,17 @@ sys.path.insert(0, str(ROOT))
 from backend.app.analytics.decision import AnalyticsConfig, calculate_die, calculate_gbim, calculate_gss
 from backend.app.database.models import AnalyticalResult, Observation, Recommendation, Station
 from backend.app.database.session import SessionLocal
-from sqlalchemy import select
+from sqlalchemy import delete, select
+
+
+def _json_safe(value):
+    if isinstance(value, dict):
+        return {key: _json_safe(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_json_safe(item) for item in value]
+    if isinstance(value, datetime):
+        return value.isoformat()
+    return value
 
 
 def compute(paths: list[Path], state: str | None, config: AnalyticsConfig) -> dict:
@@ -66,6 +76,14 @@ def persist(report: dict) -> None:
             station = database.scalar(select(Station).where(Station.station_id == item["station_id"]))
             if station is None:
                 continue
+            database.execute(
+                delete(AnalyticalResult).where(
+                    AnalyticalResult.station_id == station.id,
+                    AnalyticalResult.version == report["analytics_version"],
+                    AnalyticalResult.result_type.in_(("gss", "gbim")),
+                )
+            )
+            database.execute(delete(Recommendation).where(Recommendation.station_id == station.id))
             for result in (item["gss"], item["gbim"]):
                 database.add(
                     AnalyticalResult(
@@ -75,7 +93,7 @@ def persist(report: dict) -> None:
                         version=report["analytics_version"],
                         score=result.get("score"),
                         profile=result.get("profile"),
-                        components=result.get("components"),
+                        components=_json_safe(result.get("components")),
                     )
                 )
             die = item["die"]
@@ -86,7 +104,7 @@ def persist(report: dict) -> None:
                     priority=die["priority"],
                     recommendation=die["action"],
                     reason=die["reason"],
-                    source_indicator=die["source_indicators"],
+                    source_indicator=_json_safe(die["source_indicators"]),
                 )
             )
         database.commit()

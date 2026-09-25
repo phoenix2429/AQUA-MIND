@@ -13,7 +13,7 @@ export const forecastService = {
    * @param {number} options.horizonPoints - Number of horizon points (1-24)
    * @param {string} options.model - 'persistence' | 'random_forest' | 'xgboost'
    */
-  getForecast: (stationId, { horizonPoints = 4, model = 'xgboost' } = {}) => 
+  getForecast: (stationId, { horizonPoints = 4, model = 'xgboost' } = {}) =>
     api.get(`/api/stations/${encodeURIComponent(stationId)}/forecast`, {
       horizon_points: horizonPoints,
       model,
@@ -24,7 +24,7 @@ export const forecastService = {
    * @param {string} stationId
    * @param {string} model - 'random_forest' | 'xgboost'
    */
-  getShapExplanation: (stationId, model = 'xgboost') => 
+  getShapExplanation: (stationId, model = 'xgboost') =>
     api.get(`/api/stations/${encodeURIComponent(stationId)}/explanation`, {
       model,
     }),

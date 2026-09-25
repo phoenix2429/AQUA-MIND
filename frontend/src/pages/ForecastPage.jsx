@@ -4,16 +4,20 @@ import { Link } from 'react-router-dom';
 import { forecastService } from '../services/forecastService';
 import { stationService } from '../services/stationService';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
+import { ErrorMessage } from '../components/common/ErrorMessage';
+import { stationRoute } from '../services/stationRoutes';
 
 export function ForecastPage() {
   const [models, setModels] = useState([]);
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     async function loadData() {
       try {
         setLoading(true);
+        setError(null);
         const [modelsRes, stationsRes] = await Promise.allSettled([
           forecastService.getModels(),
           stationService.getStations({ page: 1, pageSize: 6 }),
@@ -21,8 +25,9 @@ export function ForecastPage() {
 
         if (modelsRes.status === 'fulfilled') setModels(modelsRes.value || []);
         if (stationsRes.status === 'fulfilled') setStations(stationsRes.value?.items || []);
-      } catch (err) {
-        console.error('Failed to load forecast page info:', err);
+        if (modelsRes.status === 'rejected' || stationsRes.status === 'rejected') {
+          setError('Unable to load forecasting data from the backend.');
+        }
       } finally {
         setLoading(false);
       }
@@ -42,6 +47,8 @@ export function ForecastPage() {
           24-hour horizon groundwater level prediction models (XGBoost, Random Forest, Persistence baseline).
         </p>
       </div>
+
+      {error && <ErrorMessage title="Forecast Data Unavailable" message={error} />}
 
       {/* Deployed Models Card Grid */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-2xs space-y-4">
@@ -94,7 +101,7 @@ export function ForecastPage() {
           {stations.map((st) => (
             <Link
               key={st.id}
-              to={`/stations/${st.station_id}`}
+              to={stationRoute(st.station_id)}
               className="p-4 bg-white border border-slate-200 rounded-xl hover:border-brand-400 hover:shadow-md transition-all flex items-center justify-between group"
             >
               <div>

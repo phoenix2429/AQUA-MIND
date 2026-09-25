@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Calendar, Database, ChevronRight, Layers } from 'lucide-react';
+import { stationRoute } from '../../services/stationRoutes';
 
 export function StationCard({ station }) {
   const formatDate = (isoStr) => {
@@ -22,7 +23,7 @@ export function StationCard({ station }) {
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-brand-300 hover:shadow-md transition-all flex flex-col justify-between group">
       <div className="space-y-3">
-        
+
         {/* Header Badges */}
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center space-x-1.5">
@@ -84,7 +85,7 @@ export function StationCard({ station }) {
         </div>
 
         <Link
-          to={`/stations/${station.station_id}`}
+          to={stationRoute(station.station_id)}
           className="inline-flex items-center space-x-1 text-xs font-semibold text-brand-600 hover:text-brand-800 transition-colors group-hover:translate-x-0.5 transition-transform"
         >
           <span>Analysis</span>

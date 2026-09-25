@@ -316,9 +316,13 @@ def impute_with_median(
 
     Returns imputed X_train, X_val, X_test, and the medians array.
     """
-    medians = np.nanmedian(X_train, axis=0)
-    # Replace NaN-only columns with 0
-    medians = np.where(np.isnan(medians), 0.0, medians)
+    # Do not call nanmedian for an all-NaN column: NumPy emits a warning and
+    # returns NaN.  Those columns have no training signal, so the documented
+    # deterministic fallback is zero.
+    medians = np.zeros(X_train.shape[1], dtype=np.float32)
+    has_values = np.any(~np.isnan(X_train), axis=0)
+    if np.any(has_values):
+        medians[has_values] = np.nanmedian(X_train[:, has_values], axis=0)
 
     def _fill(X: np.ndarray, m: np.ndarray) -> np.ndarray:
         out = X.copy()

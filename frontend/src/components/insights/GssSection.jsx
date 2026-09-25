@@ -43,7 +43,7 @@ export function GssSection({ gss }) {
 
       {/* Main Score & Component Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-        
+
         {/* Score Card */}
         <div className={`p-5 rounded-2xl border flex flex-col justify-between ${profileColors[profile] || profileColors.INSUFFICIENT_DATA}`}>
           <div className="space-y-1">

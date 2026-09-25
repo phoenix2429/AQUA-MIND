@@ -16,7 +16,7 @@ export class ApiError extends Error {
 
 export async function request(endpoint, options = {}) {
   const url = `${BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
-  
+
   const headers = {
     'Accept': 'application/json',
     ...options.headers,
@@ -24,7 +24,7 @@ export async function request(endpoint, options = {}) {
 
   try {
     const response = await fetch(url, { ...options, headers });
-    
+
     if (!response.ok) {
       let errorData = null;
       try {
@@ -32,14 +32,14 @@ export async function request(endpoint, options = {}) {
       } catch (_) {
         errorData = await response.text();
       }
-      
-      const detailMsg = typeof errorData === 'object' && errorData?.detail 
+
+      const detailMsg = typeof errorData === 'object' && errorData?.detail
         ? (typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData.detail))
         : `API request failed with status ${response.status}`;
-        
+
       throw new ApiError(detailMsg, response.status, errorData);
     }
-    
+
     return await response.json();
   } catch (error) {
     if (error instanceof ApiError) {
@@ -47,8 +47,8 @@ export async function request(endpoint, options = {}) {
     }
     // Network or parse error
     throw new ApiError(
-      error.message === 'Failed to fetch' 
-        ? 'Unable to connect to the AQUA-MIND backend service. Please check if the backend is running.' 
+      error.message === 'Failed to fetch'
+        ? 'Unable to connect to the AQUA-MIND backend service. Please check if the backend is running.'
         : error.message,
       0,
       null

@@ -23,12 +23,12 @@ export function ReportsPage() {
     try {
       const data = await stationService.getObservations(selectedStationId, { pageSize: 500 });
       const items = data?.items || [];
-      
+
       const csvRows = [
         ['timestamp', 'groundwater_level', 'unit', 'source'],
         ...items.map(i => [i.timestamp, i.groundwater_level, i.unit, i.source])
       ];
-      
+
       const csvString = csvRows.map(e => e.join(',')).join('\n');
       const blob = new Blob([csvString], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
@@ -57,7 +57,7 @@ export function ReportsPage() {
 
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-2xs space-y-4">
         <h3 className="text-sm font-bold text-slate-900">Export Station Telemetry Observations (CSV)</h3>
-        
+
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <select
             value={selectedStationId}
