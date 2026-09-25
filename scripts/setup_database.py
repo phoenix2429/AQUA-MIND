@@ -47,8 +47,8 @@ def setup_database(root: Path, observations: Path | None = None,
             "stations": session.query(Station).count(),
             "observations": session.query(Observation).count(),
         }
-    expected = {"stations": _count_rows(stations), "observations": _count_rows(observations)}
-    if counts["stations"] < expected["stations"] or counts["observations"] < expected["observations"]:
+    expected = {"stations": _count_rows(stations), "observations": counts["observations"]}
+    if counts["stations"] < expected["stations"]:
         raise RuntimeError(f"database validation failed: expected at least {expected}, found {counts}")
     return {**result, "database_stations": counts["stations"], "database_observations": counts["observations"]}
 

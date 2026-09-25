@@ -27,15 +27,19 @@ export function StationsPage() {
 
   const [stationsData, setStationsData] = useState({ items: [], total: 0, page: 1, page_size: pageSize });
   const [error, setError] = useState(null);
+  const [stateError, setStateError] = useState(null);
+  const [districtError, setDistrictError] = useState(null);
 
   // Load States on mount
   useEffect(() => {
     async function loadStates() {
       try {
         setLoadingStates(true);
+        setStateError(null);
         const data = await stationService.getStates();
         setStates(data || []);
       } catch (err) {
+        setStateError('Unable to load states from the backend.');
         console.error('Failed to load states:', err);
       } finally {
         setLoadingStates(false);
@@ -55,9 +59,11 @@ export function StationsPage() {
     async function loadDistricts() {
       try {
         setLoadingDistricts(true);
+        setDistrictError(null);
         const data = await stationService.getDistricts(selectedState);
         setDistricts(data || []);
       } catch (err) {
+        setDistrictError('Unable to load districts for the selected state.');
         console.error('Failed to load districts:', err);
       } finally {
         setLoadingDistricts(false);
@@ -165,6 +171,8 @@ export function StationsPage() {
         loadingStates={loadingStates}
         loadingDistricts={loadingDistricts}
       />
+      {stateError && <ErrorMessage title="State Filter Unavailable" message={stateError} />}
+      {districtError && <ErrorMessage title="District Filter Unavailable" message={districtError} />}
 
       {/* Main Content Area */}
       {error ? (

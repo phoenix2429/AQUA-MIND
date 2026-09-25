@@ -22,29 +22,38 @@ import { forecastService } from '../services/forecastService';
 import { StationCard } from '../components/stations/StationCard';
 import { SkeletonCard } from '../components/common/LoadingSpinner';
 import { NearbyStationBanner } from '../components/stations/NearbyStationBanner';
+import { ErrorMessage } from '../components/common/ErrorMessage';
+import { FarmerAdvisory } from '../components/farmer/FarmerAdvisory';
+import { api } from '../services/api';
 
 export function DashboardPage() {
   const { role, roleInfo } = useRole();
   const [states, setStates] = useState([]);
   const [featuredStations, setFeaturedStations] = useState([]);
   const [models, setModels] = useState([]);
+  const [regional, setRegional] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     async function loadDashboardData() {
       try {
         setLoading(true);
-        const [statesData, stationsResponse, modelsData] = await Promise.allSettled([
+        setError(null);
+        const [statesData, stationsResponse, modelsData, regionalData] = await Promise.allSettled([
           stationService.getStates(),
           stationService.getStations({ page: 1, pageSize: 6 }),
           forecastService.getModels(),
+          api.get('/api/regional/summary'),
         ]);
 
         if (statesData.status === 'fulfilled') setStates(statesData.value || []);
         if (stationsResponse.status === 'fulfilled') setFeaturedStations(stationsResponse.value?.items || []);
         if (modelsData.status === 'fulfilled') setModels(modelsData.value || []);
-      } catch (err) {
-        console.error('Failed to load dashboard data:', err);
+        if (regionalData.status === 'fulfilled') setRegional(regionalData.value);
+        if ([statesData, stationsResponse, modelsData, regionalData].some((result) => result.status === 'rejected')) {
+          setError('Some dashboard data could not be loaded from the backend.');
+        }
       } finally {
         setLoading(false);
       }
@@ -94,6 +103,8 @@ export function DashboardPage() {
       </div>
 
       {/* FARMER SPECIFIC SIMPLE EXPERIENCE */}
+      {error && <ErrorMessage title="Dashboard Data Unavailable" message={error} />}
+
       {role === 'farmer' && (
         <div className="space-y-6">
           {/* Nearby Station Quick Finder */}
@@ -131,6 +142,7 @@ export function DashboardPage() {
               </p>
             </div>
           </div>
+          <FarmerAdvisory />
         </div>
       )}
 
@@ -142,6 +154,11 @@ export function DashboardPage() {
               <span className="text-[10px] font-extrabold uppercase text-slate-400">States Monitored</span>
               <p className="text-2xl font-extrabold text-blue-900">{states.length || 5} States</p>
               <p className="text-xs text-slate-500">Telangana, AP, Tamil Nadu, Karnataka, MH</p>
+            </div>
+            <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-2">
+              <span className="text-[10px] font-extrabold uppercase text-slate-400">Regional telemetry</span>
+              <p className="text-2xl font-extrabold text-blue-900">{regional?.station_count?.toLocaleString() || '—'} Stations</p>
+              <p className="text-xs text-slate-500">{regional?.observation_count?.toLocaleString() || '—'} observations</p>
             </div>
             <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-2">
               <span className="text-[10px] font-extrabold uppercase text-slate-400">Sustainability Framework</span>

@@ -23,6 +23,26 @@ export const stationService = {
     }),
 
   /**
+   * Fetch every station for the supplied states using the API's page limit.
+   */
+  getAllStations: async (states) => {
+    const pageSize = 200;
+    const stateItems = await Promise.all(
+      states.map(async (state) => {
+        const firstPage = await stationService.getStations({ state, page: 1, pageSize });
+        const totalPages = Math.ceil(firstPage.total / pageSize);
+        const remainingPages = await Promise.all(
+          Array.from({ length: Math.max(0, totalPages - 1) }, (_, index) =>
+            stationService.getStations({ state, page: index + 2, pageSize })
+          )
+        );
+        return [firstPage.items, ...remainingPages.map((page) => page.items)].flat();
+      })
+    );
+    return stateItems.flat();
+  },
+
+  /**
    * Fetch nearby stations based on geolocation coordinates.
    */
   getNearbyStations: ({ latitude, longitude, radiusKm = 50, limit = 10 }) =>

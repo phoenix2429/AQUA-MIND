@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from .database.models import Observation, Station
+from .database.models import AnalyticalResult, Observation, Station
 from .database.session import get_db
 from .analytics.historical import aggregate_station_history
 from .analytics.decision import station_analytics
@@ -240,3 +240,67 @@ def get_station(station_id: str, database: Session = Depends(get_db)) -> Station
 @router.get("/models")
 def list_models() -> list[dict[str, Any]]:
     return get_available_models_info()
+
+
+@router.get("/admin/health")
+def admin_health(database: Session = Depends(get_db)) -> dict[str, Any]:
+    latest = database.scalar(select(func.max(Observation.timestamp)))
+    station_count = database.scalar(select(func.count()).select_from(Station)) or 0
+    observation_count = database.scalar(select(func.count()).select_from(Observation)) or 0
+    now = datetime.utcnow()
+    age_hours = (now - latest).total_seconds() / 3600 if latest else None
+    return {
+        "status": "ok",
+        "database": "ok",
+        "station_count": station_count,
+        "observation_count": observation_count,
+        "latest_observation_timestamp": latest,
+        "freshness_hours": round(age_hours, 2) if age_hours is not None else None,
+        "pipeline_status": "loaded" if observation_count else "empty",
+    }
+
+
+@router.get("/regional/summary")
+def regional_summary(
+    state: str | None = None,
+    district: str | None = None,
+    database: Session = Depends(get_db),
+) -> dict[str, Any]:
+    filters = []
+    if state:
+        filters.append(Station.state == state)
+    if district:
+        filters.append(Station.district == district)
+    station_query = select(Station).where(*filters)
+    station_ids = select(Station.id).where(*filters)
+    stations = database.scalars(station_query).all()
+    rows = database.execute(
+        select(
+            func.count(Observation.id),
+            func.avg(Observation.groundwater_level),
+            func.min(Observation.groundwater_level),
+            func.max(Observation.groundwater_level),
+            func.max(Observation.timestamp),
+        ).where(
+            Observation.station_id.in_(station_ids),
+            Observation.groundwater_level >= -300,
+            Observation.groundwater_level <= 50,
+        )
+    ).one()
+    distribution = database.execute(
+        select(Station.state, func.count(Station.id)).where(*filters).group_by(Station.state)
+    ).all()
+    return {
+        "state": state,
+        "district": district,
+        "station_count": len(stations),
+        "observation_count": rows[0] or 0,
+        "average_groundwater_level": rows[1],
+        "minimum_groundwater_level": rows[2],
+        "maximum_groundwater_level": rows[3],
+        "latest_observation_timestamp": rows[4],
+        "state_station_distribution": [{"state": item[0], "stations": item[1]} for item in distribution],
+        "persisted_analytics_count": database.scalar(
+            select(func.count()).select_from(AnalyticalResult).where(AnalyticalResult.station_id.in_(station_ids))
+        ) or 0,
+    }

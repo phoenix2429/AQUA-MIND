@@ -21,6 +21,22 @@ from backend.app.database.models import Observation, Station
 from backend.app.database.session import SessionLocal
 
 
+def _observation_insert(session: Session, rows: list[dict[str, object]]):
+    """Insert a batch without re-querying every station/timestamp pair."""
+    dialect = session.bind.dialect.name
+    if dialect == "sqlite":
+        from sqlalchemy.dialects.sqlite import insert as dialect_insert
+        return dialect_insert(Observation).values(rows).on_conflict_do_nothing(
+            index_elements=["station_id", "timestamp"]
+        )
+    if dialect == "postgresql":
+        from sqlalchemy.dialects.postgresql import insert as dialect_insert
+        return dialect_insert(Observation).values(rows).on_conflict_do_nothing(
+            constraint="uq_observation_station_timestamp"
+        )
+    return insert(Observation), rows
+
+
 def load_csv(
     observations_path: Path,
     stations_path: Path,
@@ -89,25 +105,28 @@ def load_csv(
                     raise ValueError(f"Observation references missing station: {row['station_id']}")
                 timestamp = datetime.fromisoformat(row["timestamp"])
                 key = (station_id, timestamp)
-                if key in pending_keys or session.scalar(
-                    select(Observation.id).where(
-                        Observation.station_id == station_id,
-                        Observation.timestamp == timestamp,
-                    )
-                ) is not None:
+                if key in pending_keys:
                     continue
                 pending_keys.add(key)
                 pending.append({"station_id": station_id, "timestamp": timestamp, "groundwater_level": float(row["groundwater_level"]), "unit": row["unit"], "source": row["source"]})
                 if len(pending) >= batch_size:
-                    session.execute(insert(Observation), pending)
+                    statement = _observation_insert(session, pending)
+                    if isinstance(statement, tuple):
+                        result = session.execute(statement[0], pending)
+                    else:
+                        result = session.execute(statement)
                     session.commit()
-                    observation_rows += len(pending)
+                    observation_rows += result.rowcount if result.rowcount is not None else len(pending)
                     pending.clear()
                     pending_keys.clear()
         if pending:
-            session.execute(insert(Observation), pending)
+            statement = _observation_insert(session, pending)
+            if isinstance(statement, tuple):
+                result = session.execute(statement[0], pending)
+            else:
+                result = session.execute(statement)
             session.commit()
-            observation_rows += len(pending)
+            observation_rows += result.rowcount if result.rowcount is not None else len(pending)
         return {"stations": station_rows, "observations": observation_rows}
     except Exception:
         session.rollback()

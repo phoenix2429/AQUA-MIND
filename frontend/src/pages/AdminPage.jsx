@@ -4,28 +4,35 @@ import { api } from '../services/api';
 import { forecastService } from '../services/forecastService';
 import { stationService } from '../services/stationService';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
+import { ErrorMessage } from '../components/common/ErrorMessage';
 
 export function AdminPage() {
   const [health, setHealth] = useState(null);
   const [totalStations, setTotalStations] = useState(null);
   const [models, setModels] = useState([]);
+  const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     async function loadAdminData() {
       try {
         setLoading(true);
-        const [healthRes, stationsRes, modelsRes] = await Promise.allSettled([
+        setError(null);
+        const [healthRes, stationsRes, modelsRes, metricsRes] = await Promise.allSettled([
           api.get('/health'),
           stationService.getStations({ page: 1, pageSize: 1 }),
           forecastService.getModels(),
+          api.get('/api/admin/health'),
         ]);
 
         if (healthRes.status === 'fulfilled') setHealth(healthRes.value);
         if (stationsRes.status === 'fulfilled') setTotalStations(stationsRes.value?.total);
         if (modelsRes.status === 'fulfilled') setModels(modelsRes.value || []);
-      } catch (err) {
-        console.error('Failed to load admin metrics:', err);
+        if (metricsRes.status === 'fulfilled') setMetrics(metricsRes.value);
+        if ([healthRes, stationsRes, modelsRes, metricsRes].some((result) => result.status === 'rejected')) {
+          setError('Some administrator metrics could not be loaded from the backend.');
+        }
       } finally {
         setLoading(false);
       }
@@ -47,6 +54,8 @@ export function AdminPage() {
 
       {loading ? (
         <LoadingSpinner message="Querying system telemetry and API services..." />
+      ) : error ? (
+        <ErrorMessage title="Administrator Data Unavailable" message={error} />
       ) : (
         <div className="space-y-6">
           {/* Health & Metrics Cards */}
@@ -66,7 +75,7 @@ export function AdminPage() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Registered Stations</span>
                 <Database className="w-4 h-4 text-brand-500" />
               </div>
-              <p className="text-2xl font-extrabold text-slate-900">{totalStations?.toLocaleString() ?? '—'}</p>
+              <p className="text-2xl font-extrabold text-slate-900">{metrics?.station_count?.toLocaleString() ?? totalStations?.toLocaleString() ?? '—'}</p>
               <p className="text-xs text-slate-500">FastAPI station registry count</p>
             </div>
 
@@ -75,7 +84,7 @@ export function AdminPage() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Active ML Models</span>
                 <Cpu className="w-4 h-4 text-purple-500" />
               </div>
-              <p className="text-2xl font-extrabold text-slate-900">{models.length} Models</p>
+              <p className="text-2xl font-extrabold text-slate-900">{models.filter((m) => m.status === 'ready').length} Ready</p>
               <p className="text-xs text-slate-500">Loaded in forecast engine</p>
             </div>
 
@@ -86,18 +95,19 @@ export function AdminPage() {
             <h3 className="text-sm font-bold text-slate-900">Loaded Machine Learning Models</h3>
             <div className="divide-y divide-slate-100">
               {models.map((m) => (
-                <div key={m.name} className="py-3 flex items-center justify-between text-xs">
+                <div key={m.model_name} className="py-3 flex items-center justify-between text-xs">
                   <div>
-                    <span className="font-bold text-slate-900 uppercase">{m.name}</span>
-                    <p className="text-slate-500">{m.description}</p>
+                    <span className="font-bold text-slate-900 uppercase">{m.display_name || m.model_name}</span>
+                    <p className="text-slate-500">{m.type || 'forecast model'}</p>
                   </div>
-                  <span className="font-mono font-semibold bg-slate-100 px-2 py-1 rounded text-slate-700">
-                    v{m.version || '1.0'}
+                  <span className={`font-mono font-semibold px-2 py-1 rounded ${m.status === 'ready' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                    {m.status || 'unknown'}
                   </span>
                 </div>
               ))}
             </div>
           </div>
+          {metrics && <div className="p-4 bg-white border border-slate-200 rounded-2xl text-xs text-slate-600">Database: <strong>{metrics.database}</strong> · Observations: <strong>{metrics.observation_count?.toLocaleString()}</strong> · Latest: <strong>{metrics.latest_observation_timestamp || 'none'}</strong> · Pipeline: <strong>{metrics.pipeline_status}</strong></div>}
 
           {/* Notice on pending admin endpoints */}
           <div className="p-4 bg-slate-100 border border-slate-200 rounded-2xl text-xs text-slate-600 flex items-start space-x-3">

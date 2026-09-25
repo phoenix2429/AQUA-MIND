@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Lightbulb, Info, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { stationService } from '../services/stationService';
+import { stationRoute } from '../services/stationRoutes';
 
 export function InsightsPage() {
   const [stations, setStations] = useState([]);
@@ -44,7 +45,7 @@ export function InsightsPage() {
           {stations.map((st) => (
             <Link
               key={st.id}
-              to={`/stations/${st.station_id}`}
+              to={stationRoute(st.station_id)}
               className="p-4 bg-white border border-slate-200 rounded-xl hover:border-purple-300 hover:shadow-md transition-all flex items-center justify-between group"
             >
               <div>
