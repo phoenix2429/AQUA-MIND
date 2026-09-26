@@ -40,18 +40,16 @@ export function DashboardPage() {
       try {
         setLoading(true);
         setError(null);
-        const [statesData, stationsResponse, modelsData, regionalData] = await Promise.allSettled([
+        const [statesData, stationsResponse, modelsData] = await Promise.allSettled([
           stationService.getStates(),
           stationService.getStations({ page: 1, pageSize: 6 }),
           forecastService.getModels(),
-          api.get('/api/regional/summary'),
         ]);
 
         if (statesData.status === 'fulfilled') setStates(statesData.value || []);
         if (stationsResponse.status === 'fulfilled') setFeaturedStations(stationsResponse.value?.items || []);
         if (modelsData.status === 'fulfilled') setModels(modelsData.value || []);
-        if (regionalData.status === 'fulfilled') setRegional(regionalData.value);
-        if ([statesData, stationsResponse, modelsData, regionalData].some((result) => result.status === 'rejected')) {
+        if ([statesData, stationsResponse, modelsData].some((result) => result.status === 'rejected')) {
           setError('Some dashboard data could not be loaded from the backend.');
         }
       } finally {
@@ -60,6 +58,14 @@ export function DashboardPage() {
     }
     loadDashboardData();
   }, []);
+
+  useEffect(() => {
+    if (role === 'official' && !regional) {
+      api.get('/api/regional/summary', {}, { cacheTtlMs: 300000 })
+        .then((res) => setRegional(res))
+        .catch(() => {});
+    }
+  }, [role, regional]);
 
   return (
     <div className="space-y-6">
@@ -152,8 +158,8 @@ export function DashboardPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-2">
               <span className="text-[10px] font-extrabold uppercase text-slate-400">States Monitored</span>
-              <p className="text-2xl font-extrabold text-blue-900">{states.length || 5} States</p>
-              <p className="text-xs text-slate-500">Telangana, AP, Tamil Nadu, Karnataka, MH</p>
+              <p className="text-2xl font-extrabold text-blue-900">{states.length || '—'} States</p>
+              <p className="text-xs text-slate-500">States returned by the telemetry registry</p>
             </div>
             <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-2">
               <span className="text-[10px] font-extrabold uppercase text-slate-400">Regional telemetry</span>
@@ -195,8 +201,8 @@ export function DashboardPage() {
             </div>
             <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-2">
               <span className="text-[10px] font-extrabold uppercase text-slate-400">FastAPI Route Status</span>
-              <p className="text-2xl font-extrabold text-emerald-600">HEALTHY</p>
-              <p className="text-xs text-slate-500">Backend listening on port 8001</p>
+              <p className="text-2xl font-extrabold text-emerald-600">Connected</p>
+              <p className="text-xs text-slate-500">API response received</p>
             </div>
           </div>
         </div>

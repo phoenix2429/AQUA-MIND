@@ -39,8 +39,8 @@ export function Navbar({ onToggleSidebar }) {
   const RoleIcon = roleInfo.icon;
 
   return (
-    <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-2xs">
-      <div className="flex items-center justify-between h-16 px-4 md:px-6 max-w-7xl mx-auto">
+    <header className="sticky top-0 z-30 bg-[#071a2b] text-white border-b border-white/10 shadow-lg">
+      <div className="flex items-center justify-between h-[4.5rem] px-4 md:px-7">
 
         {/* Left: Mobile Drawer Button & Branding */}
         <div className="flex items-center space-x-3">
@@ -53,17 +53,17 @@ export function Navbar({ onToggleSidebar }) {
           </button>
 
           <Link to="/" className="flex items-center space-x-2.5 group">
-            <div className="p-2.5 rounded-xl bg-gradient-to-tr from-brand-700 via-brand-600 to-aqua-500 text-white shadow-md shadow-brand-600/20 group-hover:scale-105 transition-transform duration-200">
+            <div className="p-2.5 rounded-xl bg-gradient-to-tr from-cyan-500 to-teal-400 text-slate-950 shadow-md shadow-cyan-500/20 group-hover:scale-105 transition-transform duration-200">
               <Droplet className="w-5 h-5 fill-current" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-lg tracking-tight text-slate-900">AQUA-MIND</span>
-                <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider text-brand-700 bg-brand-50 rounded-md border border-brand-200 uppercase">
+                <span className="font-extrabold text-lg tracking-tight text-white">AQUA-MIND</span>
+                <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider text-cyan-200 bg-white/10 rounded-md border border-white/15 uppercase">
                   Telemetry Intelligence
                 </span>
               </div>
-              <p className="text-[10px] text-slate-500 font-medium hidden sm:block leading-none mt-0.5">
+              <p className="text-[10px] text-slate-400 font-medium hidden sm:block leading-none mt-0.5">
                 Explainable Groundwater Decision Intelligence
               </p>
             </div>
@@ -79,7 +79,7 @@ export function Navbar({ onToggleSidebar }) {
               placeholder="Search telemetry station or district..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium focus:outline-none focus:ring-2 transition-all placeholder:text-slate-400 ${roleInfo.theme.ring}`}
+              className={`w-full pl-9 pr-4 py-2 text-xs bg-white/10 border border-white/15 rounded-xl font-medium text-white focus:outline-none focus:ring-2 transition-all placeholder:text-slate-400 ${roleInfo.theme.ring}`}
             />
           </div>
         </form>
@@ -107,7 +107,7 @@ export function Navbar({ onToggleSidebar }) {
           <div className="relative">
             <button
               onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-2xs ${roleInfo.theme.badge}`}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-xl border text-xs font-bold transition-all shadow-2xs ${roleInfo.theme.badge}`}
             >
               <RoleIcon className="w-4 h-4" />
               <span className="hidden sm:inline">{roleInfo.name}</span>

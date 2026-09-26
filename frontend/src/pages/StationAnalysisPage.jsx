@@ -31,6 +31,7 @@ export function StationAnalysisPage() {
 
   const [station, setStation] = useState(null);
   const [analytics, setAnalytics] = useState(null);
+  const [currentReading, setCurrentReading] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -44,9 +45,10 @@ export function StationAnalysisPage() {
         setLoading(true);
         setError(null);
 
-        const [stationRes, analyticsRes] = await Promise.allSettled([
+        const [stationRes, analyticsRes, historyRes] = await Promise.allSettled([
           stationService.getStation(stationId),
           analyticsService.getStationAnalytics(stationId),
+          stationService.getHistory(stationId, { buckets: 1 }),
         ]);
 
         if (stationRes.status === 'fulfilled') {
@@ -57,6 +59,9 @@ export function StationAnalysisPage() {
 
         if (analyticsRes.status === 'fulfilled') {
           setAnalytics(analyticsRes.value);
+        }
+        if (historyRes.status === 'fulfilled' && historyRes.value?.length) {
+          setCurrentReading(historyRes.value[historyRes.value.length - 1]);
         }
       } catch (err) {
         setError(err.message || 'Failed to load station analysis.');
@@ -96,7 +101,7 @@ export function StationAnalysisPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-[1440px] space-y-7">
 
       {/* Top Back Nav Button */}
       <div className="flex items-center justify-between">
@@ -108,16 +113,16 @@ export function StationAnalysisPage() {
           <span>Back to Stations Discovery</span>
         </Link>
 
-        <span className="text-xs text-slate-400 font-mono">
-          Station Analysis • {station.station_id}
+        <span className="eyebrow font-mono">
+          Live station workspace • {station.station_id}
         </span>
       </div>
 
       {/* 1. Station Header Banner */}
-      <StationHeader station={station} analytics={analytics} />
+      <StationHeader station={station} analytics={analytics} currentReading={currentReading} />
 
       {/* 2. Analytical Tabbed Navigation Bar */}
-      <div className="bg-white p-1.5 rounded-2xl border border-slate-200 shadow-2xs flex items-center space-x-1 overflow-x-auto no-scrollbar">
+      <div className="surface p-1.5 flex items-center space-x-1 overflow-x-auto no-scrollbar sticky top-[5.25rem] z-20">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;

@@ -19,7 +19,8 @@ def create_app() -> FastAPI:
         yield
 
     application = FastAPI(title="AQUA-MIND API", version="0.1.0", description="Groundwater telemetry and decision intelligence API", lifespan=lifespan)
-    origins = [origin.strip() for origin in os.getenv("FRONTEND_ORIGIN", "http://localhost:5173").split(",") if origin.strip()]
+    default_origins = "http://localhost:5173,http://127.0.0.1:5173"
+    origins = [origin.strip() for origin in os.getenv("FRONTEND_ORIGIN", default_origins).split(",") if origin.strip()]
     # Browsers reject wildcard origins together with credentials. More
     # importantly, credentials must never be enabled for an unrestricted
     # origin list.
@@ -28,7 +29,7 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=origins,
         allow_credentials=allow_credentials,
-        allow_methods=["GET"],
+        allow_methods=["GET", "OPTIONS"],
         allow_headers=["*"],
     )
     application.include_router(router)

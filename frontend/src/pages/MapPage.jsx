@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { MapPin, Navigation, Filter, Radio } from 'lucide-react';
 import { stationService } from '../services/stationService';
 import { StationMap } from '../components/map/StationMap';
@@ -8,8 +8,7 @@ import { ErrorMessage } from '../components/common/ErrorMessage';
 export function MapPage() {
   const [states, setStates] = useState([]);
   const [selectedState, setSelectedState] = useState('');
-  const [stations, setStations] = useState([]);
-  const [mapCenter, setMapCenter] = useState([17.385, 78.4867]); // Hyderabad default
+  const [allStations, setAllStations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -25,24 +24,11 @@ export function MapPage() {
 
   useEffect(() => {
     async function fetchMapStations() {
-      if (!selectedState && states.length === 0) {
-        return;
-      }
+      if (states.length === 0) return;
       try {
         setLoading(true);
         setError(null);
-        const items = selectedState
-          ? await stationService.getAllStations([selectedState])
-          : await stationService.getAllStations(states);
-        setStations(items);
-
-        // Compute dynamic center if valid stations exist
-        const withCoords = items.filter(s => typeof s.latitude === 'number' && typeof s.longitude === 'number');
-        if (withCoords.length > 0) {
-          const avgLat = withCoords.reduce((acc, s) => acc + s.latitude, 0) / withCoords.length;
-          const avgLon = withCoords.reduce((acc, s) => acc + s.longitude, 0) / withCoords.length;
-          setMapCenter([avgLat, avgLon]);
-        }
+        setAllStations(await stationService.getAllStations(states));
       } catch (err) {
         setError(err.message || 'Unable to load telemetry stations for map.');
       } finally {
@@ -50,7 +36,24 @@ export function MapPage() {
       }
     }
     fetchMapStations();
-  }, [selectedState, states]);
+  }, [states]);
+
+  const stations = useMemo(
+    () => selectedState
+      ? allStations.filter((station) => station.state === selectedState)
+      : allStations,
+    [allStations, selectedState],
+  );
+  const mapCenter = useMemo(() => {
+    const withCoords = stations.filter(
+      (station) => typeof station.latitude === 'number' && typeof station.longitude === 'number',
+    );
+    if (!withCoords.length) return [17.385, 78.4867];
+    return [
+      withCoords.reduce((sum, station) => sum + station.latitude, 0) / withCoords.length,
+      withCoords.reduce((sum, station) => sum + station.longitude, 0) / withCoords.length,
+    ];
+  }, [stations]);
 
   return (
     <div className="space-y-6">
@@ -93,7 +96,7 @@ export function MapPage() {
         <div className="space-y-3">
           <div className="flex items-center justify-between text-xs text-slate-500 px-1">
             <span>
-              Displaying <strong>{stations.filter(s => s.latitude && s.longitude).length}</strong> mapped stations
+              Displaying <strong>{stations.filter(s => typeof s.latitude === 'number' && typeof s.longitude === 'number').length}</strong> mapped stations
             </span>
             <span>Click any marker to inspect station details</span>
           </div>

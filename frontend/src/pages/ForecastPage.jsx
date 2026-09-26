@@ -61,35 +61,39 @@ export function ForecastPage() {
           <LoadingSpinner message="Querying active model registry..." />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {models.map((model) => (
-              <div key={model.name} className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-900 uppercase">{model.name}</span>
-                  <span className="text-[10px] font-mono bg-white px-2 py-0.5 rounded border border-slate-200 text-slate-600">
-                    v{model.version || '1.0'}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  {model.description || '24-hour horizon groundwater level forecasting model'}
-                </p>
-                {model.evaluation && (
-                  <div className="pt-2 border-t border-slate-200/60 grid grid-cols-3 gap-1 text-[11px] font-mono">
-                    <div>
-                      <span className="text-[9px] uppercase text-slate-400 block">MAE</span>
-                      <span className="font-bold text-slate-700">{model.evaluation.mae?.toFixed(3) ?? 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span className="text-[9px] uppercase text-slate-400 block">RMSE</span>
-                      <span className="font-bold text-slate-700">{model.evaluation.rmse?.toFixed(3) ?? 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span className="text-[9px] uppercase text-slate-400 block">R²</span>
-                      <span className="font-bold text-slate-700">{model.evaluation.r2?.toFixed(3) ?? 'N/A'}</span>
-                    </div>
+            {models.map((model) => {
+              const metrics = model.evaluation || model.test_metrics;
+              const displayName = model.display_name || model.name || model.model_name;
+              return (
+                <div key={model.model_name || model.name} className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-900 uppercase">{displayName}</span>
+                    <span className="text-[10px] font-mono bg-white px-2 py-0.5 rounded border border-slate-200 text-slate-600">
+                      v{model.version || '1.0'}
+                    </span>
                   </div>
-                )}
-              </div>
-            ))}
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    {model.description || `${displayName} for 24-hour horizon groundwater level forecasting`}
+                  </p>
+                  {metrics && (
+                    <div className="pt-2 border-t border-slate-200/60 grid grid-cols-3 gap-1 text-[11px] font-mono">
+                      <div>
+                        <span className="text-[9px] uppercase text-slate-400 block">MAE</span>
+                        <span className="font-bold text-slate-700">{metrics.mae?.toFixed(3) ?? 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] uppercase text-slate-400 block">RMSE</span>
+                        <span className="font-bold text-slate-700">{metrics.rmse?.toFixed(3) ?? 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] uppercase text-slate-400 block">R²</span>
+                        <span className="font-bold text-slate-700">{metrics.r2?.toFixed(3) ?? 'N/A'}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

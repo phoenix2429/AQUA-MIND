@@ -44,7 +44,7 @@ export function Sidebar({ isOpen, onCloseSidebar }) {
 
       {/* Sidebar Container */}
       <aside className={`
-        fixed md:sticky top-16 z-40 h-[calc(100vh-4rem)] w-64 bg-white border-r border-slate-200/80
+        fixed md:sticky top-[4.5rem] z-40 h-[calc(100vh-4.5rem)] w-64 bg-[#0b2238] border-r border-white/10
         flex flex-col justify-between transition-transform duration-200 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
@@ -69,7 +69,7 @@ export function Sidebar({ isOpen, onCloseSidebar }) {
 
           {/* Navigation Items */}
           <nav className="space-y-1">
-            <div className="px-3 pb-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+            <div className="px-3 pb-2 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
               Navigation Menu
             </div>
 
@@ -84,7 +84,7 @@ export function Sidebar({ isOpen, onCloseSidebar }) {
                     flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all
                     ${isActive
                       ? `${roleInfo.theme.primary} shadow-xs`
-                      : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'}
+                      : 'text-slate-300 hover:bg-white/10 hover:text-white'}
                   `}
                 >
                   <Icon className="w-4 h-4 transition-colors" />
@@ -102,8 +102,8 @@ export function Sidebar({ isOpen, onCloseSidebar }) {
         </div>
 
         {/* Sidebar Footer */}
-        <div className="p-4 border-t border-slate-100 text-center bg-slate-50/50">
-          <p className="text-[11px] text-slate-500 font-bold">AQUA-MIND Platform v0.1.0</p>
+        <div className="p-4 border-t border-white/10 text-center bg-black/10">
+          <p className="text-[11px] text-slate-300 font-bold">AQUA-MIND Platform</p>
           <p className="text-[10px] text-slate-400">NWDP Groundwater Telemetry</p>
         </div>
       </aside>

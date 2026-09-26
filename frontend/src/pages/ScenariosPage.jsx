@@ -24,7 +24,7 @@ export function ScenariosPage() {
         <div className="space-y-1">
           <h4 className="font-bold">Feature Status — Backend Scenario Endpoint Pending</h4>
           <p className="text-amber-900 leading-relaxed">
-            Scientifically validated backend scenario endpoints are currently under development. The controls below operate purely in <strong>Demonstration Scenario — Synthetic Input</strong> mode for UI design validation.
+            Scientifically validated backend scenario endpoints are currently under development. The controls below operate purely in <strong>Demonstration Scenario — Synthetic Input</strong> mode for UI design validation; values must not be used as observed groundwater measurements.
           </p>
         </div>
       </div>
@@ -82,21 +82,21 @@ export function ScenariosPage() {
             <span>Synthetic Scenario Summary Output</span>
             <span className="text-slate-400 font-normal text-[11px]">Unvalidated Demonstration</span>
           </div>
-          <div className="grid grid-cols-3 gap-2 text-center pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-center pt-2">
             <div className="bg-white p-2 rounded-lg border border-slate-200">
-              <span className="text-[9px] uppercase font-semibold text-slate-400 block">Baseline Depth</span>
-              <span className="font-mono font-bold text-slate-800">12.45 m</span>
+              <span className="text-[9px] uppercase font-semibold text-slate-400 block">Reference input</span>
+              <span className="font-mono font-bold text-slate-800">0% delta</span>
             </div>
             <div className="bg-white p-2 rounded-lg border border-slate-200">
-              <span className="text-[9px] uppercase font-semibold text-slate-400 block">Synthetic Scenario</span>
+              <span className="text-[9px] uppercase font-semibold text-slate-400 block">Synthetic response index</span>
               <span className="font-mono font-bold text-brand-700">
-                {(12.45 + (syntheticExtractionDelta * 0.05) - (syntheticRainfallDelta * 0.04)).toFixed(2)} m
+                {(syntheticExtractionDelta * 0.05 - syntheticRainfallDelta * 0.04).toFixed(2)} units
               </span>
             </div>
             <div className="bg-white p-2 rounded-lg border border-slate-200">
-              <span className="text-[9px] uppercase font-semibold text-slate-400 block">Difference</span>
+              <span className="text-[9px] uppercase font-semibold text-slate-400 block">Synthetic difference</span>
               <span className="font-mono font-bold text-amber-700">
-                {((syntheticExtractionDelta * 0.05) - (syntheticRainfallDelta * 0.04)).toFixed(2)} m
+                {((syntheticExtractionDelta * 0.05) - (syntheticRainfallDelta * 0.04)).toFixed(2)} units
               </span>
             </div>
           </div>
