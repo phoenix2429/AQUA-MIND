@@ -2,6 +2,10 @@ __pycache__/
 .pytest_cache/
 *.py[cod]
 .env
+venv/
+**/venv/
+.venv/
+scratch/
 
 # Local databases
 *.db

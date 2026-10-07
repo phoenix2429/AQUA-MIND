@@ -66,7 +66,9 @@ export function AdminPage() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">FastAPI Service</span>
                 <Activity className="w-4 h-4 text-emerald-500" />
               </div>
-              <p className="text-2xl font-extrabold text-slate-900">{health?.status === 'ok' ? 'HEALTHY' : 'OFFLINE'}</p>
+              <p className={`text-2xl font-extrabold ${health?.status === 'ok' ? 'text-emerald-700' : 'text-rose-700'}`}>
+                {health?.status === 'ok' ? 'Connected' : 'Unavailable'}
+              </p>
               <p className="text-xs text-slate-500">Service: {health?.service || 'aqua-mind-api'}</p>
             </div>
 

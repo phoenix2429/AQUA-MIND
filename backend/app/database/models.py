@@ -42,10 +42,11 @@ class Station(Base):
     elevation_msl: Mapped[float | None] = mapped_column(Float)
     source: Mapped[str] = mapped_column(String(64))
     source_file: Mapped[str] = mapped_column(Text)
-    latest_observation_timestamp: Mapped[datetime | None] = mapped_column(DateTime)
+    latest_observation_timestamp: Mapped[datetime | None] = mapped_column(DateTime, index=True)
     observation_count: Mapped[int] = mapped_column(Integer, default=0)
 
     observations: Mapped[list[Observation]] = relationship(back_populates="station")
+    __table_args__ = (Index("ix_stations_state_district", "state", "district"),)
 
 
 class Observation(Base):

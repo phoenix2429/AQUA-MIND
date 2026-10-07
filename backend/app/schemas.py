@@ -134,6 +134,9 @@ class RecommendationResponse(BaseModel):
     recommendation: str
     action: str | None = None
     reason: str
+    crop_recommendation: str | None = None
+    irrigation_recommendation: str | None = None
+    groundwater_condition: str | None = None
     components: dict
     source_indicators: dict = {}
 

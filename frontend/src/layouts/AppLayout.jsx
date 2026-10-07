@@ -18,7 +18,7 @@ function AppLayoutInner() {
           onCloseSidebar={() => setIsSidebarOpen(false)}
         />
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full overflow-x-hidden space-y-6">
+        <main className="flex-1 min-w-0 bg-[#f4f7fb] p-4 md:p-7 lg:p-9 w-full overflow-x-hidden">
           <Outlet />
         </main>
       </div>

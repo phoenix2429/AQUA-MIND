@@ -1,7 +1,7 @@
 import React from 'react';
-import { MapPin, Calendar, Database, Layers, Radio, ShieldCheck } from 'lucide-react';
+import { MapPin, Radio, Activity } from 'lucide-react';
 
-export function StationHeader({ station, analytics }) {
+export function StationHeader({ station, analytics, currentReading }) {
   if (!station) return null;
 
   const formatDate = (isoStr) => {
@@ -22,9 +22,12 @@ export function StationHeader({ station, analytics }) {
   const gssScore = analytics?.gss?.score;
   const gbimProfile = analytics?.gbim?.profile;
   const diePriority = analytics?.die?.priority;
+  const hasReading = Number.isFinite(Number(currentReading?.groundwater_level));
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-2xs space-y-4">
+    <div className="surface overflow-hidden">
+      <div className="h-1 bg-gradient-to-r from-cyan-500 via-teal-400 to-blue-600" />
+      <div className="p-5 md:p-7 space-y-5">
       {/* Top Tag & Status Badges */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
         <div className="flex items-center space-x-2">
@@ -70,7 +73,7 @@ export function StationHeader({ station, analytics }) {
       </div>
 
       {/* Main Station Name & Location Meta */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
             {station.station_name}
@@ -83,23 +86,35 @@ export function StationHeader({ station, analytics }) {
           </p>
         </div>
 
-        {/* Quick Metadata Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div className="p-3 rounded-xl bg-cyan-50 border border-cyan-100">
+            <span className="eyebrow text-cyan-700 block">Current reading</span>
+            <span className="mt-1 flex items-center gap-1 text-xl font-extrabold text-slate-950">
+              {hasReading ? Number(currentReading.groundwater_level).toFixed(2) : '—'}
+              <span className="text-xs font-medium text-slate-500">m bgl</span>
+            </span>
+            <span className="text-[10px] text-slate-500">{hasReading ? 'Observed telemetry' : 'Not available'}</span>
+          </div>
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
           <div>
-            <span className="text-[10px] uppercase font-bold text-slate-400 block">Station ID</span>
+            <span className="eyebrow block">Station ID</span>
             <span className="font-mono font-semibold text-slate-800">{station.station_id}</span>
           </div>
-
+          </div>
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
           <div>
-            <span className="text-[10px] uppercase font-bold text-slate-400 block">Total Records</span>
+            <span className="eyebrow block">Total records</span>
             <span className="font-semibold text-slate-800">{station.observation_count?.toLocaleString() || 0}</span>
           </div>
-
+          </div>
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
           <div>
-            <span className="text-[10px] uppercase font-bold text-slate-400 block">Latest Timestamp</span>
+            <span className="eyebrow block">Latest observation</span>
             <span className="font-semibold text-slate-800">{formatDate(station.latest_observation_timestamp)}</span>
           </div>
+          </div>
         </div>
+      </div>
       </div>
     </div>
   );

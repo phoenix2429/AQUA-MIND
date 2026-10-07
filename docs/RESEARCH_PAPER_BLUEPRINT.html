@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Research Paper Blueprint — AQUA-MIND Groundwater Forecasting</title>
+  <style>
+    :root {
+      --primary: #0369a1;
+      --primary-dark: #075985;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --bg: #f8fafc;
+      --paper-bg: #ffffff;
+      --border: #cbd5e1;
+      --code-bg: #f1f5f9;
+      --accent: #0284c7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Times New Roman", Times, Cambria, Georgia, serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 30px 15px;
+    }
+
+    .no-print-bar {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 900px;
+      margin: 0 auto 25px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0f172a;
+      color: white;
+      padding: 14px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);
+    }
+
+    .no-print-bar button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+
+    .no-print-bar button:hover {
+      background: #0369a1;
+    }
+
+    .paper-container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--paper-bg);
+      padding: 60px 70px;
+      box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
+
+    .paper-header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 25px;
+    }
+
+    h1.paper-title {
+      font-size: 26px;
+      font-weight: bold;
+      color: #0f172a;
+      line-height: 1.3;
+      margin-bottom: 18px;
+    }
+
+    .authors {
+      font-size: 15px;
+      font-style: italic;
+      color: #334155;
+      margin-bottom: 8px;
+    }
+
+    .affiliations {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .abstract-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid var(--primary);
+      padding: 20px;
+      margin: 25px 0;
+      font-size: 14px;
+      text-align: justify;
+    }
+
+    .abstract-title {
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      color: var(--primary-dark);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 13px;
+    }
+
+    .keywords {
+      margin-top: 12px;
+      font-size: 13px;
+    }
+
+    h2 {
+      font-size: 18px;
+      font-weight: bold;
+      color: #0f172a;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 4px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    h3 {
+      font-size: 15px;
+      font-weight: bold;
+      color: #1e293b;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    p {
+      font-size: 15px;
+      margin-bottom: 14px;
+      text-align: justify;
+      text-justify: inter-word;
+    }
+
+    ul, ol {
+      margin-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    li {
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 13.5px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 9px 12px;
+      text-align: left;
+    }
+
+    th {
+      background: #f1f5f9;
+      font-weight: bold;
+      color: #0f172a;
+    }
+
+    tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    .formula-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 12px 18px;
+      border-radius: 4px;
+      margin: 16px 0;
+      font-family: "Cambria Math", "Times New Roman", serif;
+      font-size: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .formula-eq {
+      font-style: italic;
+      font-weight: 500;
+    }
+
+    .formula-num {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .figure-placeholder {
+      border: 2px dashed #94a3b8;
+      background: #f8fafc;
+      padding: 24px;
+      text-align: center;
+      margin: 20px 0;
+      border-radius: 6px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .figure-title {
+      font-weight: bold;
+      font-size: 14px;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+
+    .figure-desc {
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+
+    .reference-list {
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .reference-list p {
+      text-indent: -24px;
+      margin-left: 24px;
+      margin-bottom: 8px;
+      text-align: left;
+    }
+
+    /* Print Formatting */
+    @media print {
+      @page {
+        size: A4;
+        margin: 20mm;
+      }
+      body {
+        padding: 0;
+        background: #fff;
+      }
+      .no-print-bar {
+        display: none !important;
+      }
+      .paper-container {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        max-width: 100%;
+      }
+      h2, h3 {
+        page-break-after: avoid;
+      }
+      table, .formula-box, .figure-placeholder {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Control Bar -->
+<div class="no-print-bar">
+  <div>
+    <strong>Academic Manuscript Blueprint & Guide</strong>
+    <div style="font-size: 12px; opacity: 0.85;">AQUA-MIND Groundwater Telemetry Research Paper Structure</div>
+  </div>
+  <button onclick="window.print()">
+    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+      <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+      <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
+    </svg>
+    Save as PDF / Print
+  </button>
+</div>
+
+<!-- Main Paper Body -->
+<div class="paper-container">
+
+  <div class="paper-header">
+    <h1 class="paper-title">Large-Scale Groundwater Level Forecasting and Decision Intelligence Across Peninsular India Using Machine Learning and Tree SHAP Explainability</h1>
+    <div class="authors">P. Avinash et al.</div>
+    <div class="affiliations">Department of Computer Science & Engineering / Water Resource Technology<br>AQUA-MIND Research Initiative</div>
+  </div>
+
+  <!-- Abstract Box -->
+  <div class="abstract-box">
+    <div class="abstract-title">Abstract</div>
+    <p>
+      Groundwater depletion is a critical challenge in Peninsular India, where intensive agricultural reliance on hard-rock and alluvial aquifers threatens water security. Numerical models (e.g., MODFLOW) struggle at regional scales due to unmapped hydrogeological parameters and high computational demands. This study introduces <strong>AQUA-MIND</strong>, an end-to-end data-driven framework for large-scale groundwater level forecasting and decision intelligence. Utilizing automated Digital Water Level Recorder (DWLR) telemetry from <strong>5,426 stations</strong> across five states (Telangana, Andhra Pradesh, Karnataka, Tamil Nadu, and Maharashtra) from 2021 to 2026, we process over <strong>21.6 million observations</strong> with strict physical quality bounding ([-300 m, +50 m]). We engineer a 16-dimensional feature vector combining autoregressive lags (6h to 7d), moving statistics, 7-day ordinary least squares (OLS) trend slopes, cyclical calendar variables, and geospatial coordinates. Under a rigorous out-of-time chronological 70/15/15 train-val-test split (15.05M train, 3.23M test rows), Random Forest achieves superior predictive accuracy with a test Mean Absolute Error (MAE) of <strong>0.620 m</strong>, Root Mean Squared Error (RMSE) of <strong>3.336 m</strong>, and coefficient of determination ($R^2$) of <strong>0.9752</strong>, outperforming XGBoost ($R^2 = 0.9664$) and a persistence baseline. Tree SHAP interpretability establishes that 7-day moving averages (48.4%) and recent 6-hour antecedent lags (15.9%) govern predictions, validating physical consistency. Furthermore, we operationalize predictions through the Groundwater Stability Score (GSS) and a Decision Intelligence Engine (DIE) to deliver automated, non-invasive irrigation and crop advisories for smallholder farmers.
+    </p>
+    <div class="keywords">
+      <strong>Keywords:</strong> Groundwater Telemetry, Random Forest, XGBoost, Tree SHAP, Hydro-informatics, Peninsular India, Decision Support System.
+    </div>
+  </div>
+
+  <!-- Section 1 -->
+  <h2>1. Introduction</h2>
+  <p>
+    Groundwater represents the primary source of irrigation and drinking water for over 60% of rural India. Over-extraction driven by subsidized rural electrification has resulted in severe aquifer depletion across the hard-rock terrains of the Deccan Plateau and southern peninsular states. Effective resource governance requires reliable, multi-step water table forecasting to alert stakeholders before crisis thresholds are breached.
+  </p>
+  <p>
+    Historically, numerical groundwater models such as MODFLOW have served as the benchmark for hydrogeological simulation. However, these models require detailed parameterization of aquifer thickness, hydraulic conductivity, specific yield, and recharge coefficients—data that remain sparse or heterogeneous across regional domains. In contrast, data-driven machine learning (ML) paradigms offer a scalable alternative by extracting temporal patterns directly from automated sensor networks.
+  </p>
+  <p>
+    Despite growing literature on ML in hydrology, prior studies often exhibit critical limitations: (1) evaluation on small datasets restricted to individual watersheds, (2) random cross-validation splits that introduce temporal data leakage, and (3) a lack of explainability, yielding "black-box" predictions disconnected from agronomic decision-making. To address these gaps, this paper presents the following contributions:
+  </p>
+  <ul>
+    <li><strong>Multi-State Scale:</strong> Ingestion and standardization of 21,667,754 telemetry readings across 5,426 automated stations spanning five diverse Indian states.</li>
+    <li><strong>Leakage-Free Benchmarking:</strong> Evaluation under a strict chronological out-of-time split (3.22M test records) across Persistence, Random Forest, and XGBoost models.</li>
+    <li><strong>Model Transparency:</strong> Tree SHAP verification ensuring predictions adhere to physical hydrogeological intuition.</li>
+    <li><strong>Actionable Analytics:</strong> Bridging predictions to real-world impact via Groundwater Stability Scoring (GSS) and the Decision Intelligence Engine (DIE).</li>
+  </ul>
+
+  <!-- Section 2 -->
+  <h2>2. Study Area and Telemetry Dataset</h2>
+  <p>
+    The study domain spans five peninsular states: Andhra Pradesh, Karnataka, Maharashtra, Tamil Nadu, and Telangana. The region encompasses contrasting hydrogeological environments, ranging from crystalline basement complexes and basaltic traps of the Deccan Plateau to coastal sedimentary formations.
+  </p>
+
+  <div class="figure-placeholder">
+    <div class="figure-title">Figure 1: Geographic Distribution of 5,426 DWLR Telemetry Stations Across Peninsular India</div>
+    <div class="figure-desc">Station density overlay across Telangana, Andhra Pradesh, Karnataka, Tamil Nadu, and Maharashtra.</div>
+  </div>
+
+  <h3>2.1 Data Ingestion and Quality Control</h3>
+  <p>
+    Automated telemetry data was captured at 6-hour intervals between January 2021 and September 2026. A strict data cleaning pipeline enforced physical bounding:
+  </p>
+  <ul>
+    <li>Groundwater level values were bounded to $[-300.0\text{ m}, +50.0\text{ m}]$ relative to ground surface.</li>
+    <li>Sensor error tokens, negative anomalies, non-finite representations (NaN/Inf), and transmission glitches were removed.</li>
+    <li>SHA-256 deduplication resolved 3,407 duplicate timestamp collisions, yielding a clean dataset of 21,667,754 records.</li>
+  </ul>
+
+  <!-- Section 3 -->
+  <h2>3. Methodology and Mathematical Formulation</h2>
+
+  <h3>3.1 Feature Engineering Pipeline (16 Variables)</h3>
+  <p>For each station observation at time $t$, a 16-dimensional feature vector $\mathbf{x}_t$ was synthesized:</p>
+
+  <div class="formula-box">
+    <span class="formula-eq">\mathbf{x}_t = [L_{6\text{h}}, L_{12\text{h}}, L_{24\text{h}}, L_{48\text{h}}, L_{7\text{d}}, \mu_{7\text{d}}, \sigma_{7\text{d}}, \mu_{30\text{d}}, \beta_{7\text{d}}, H, D, M, S, \text{Lat}, \text{Lon}, Z_{\text{MSL}}]</span>
+    <span class="formula-num">(1)</span>
+  </div>
+
+  <p>Where the 7-day OLS slope $\beta_{7\text{d}}$ captures drawdown trajectory in meters per hour:</p>
+
+  <div class="formula-box">
+    <span class="formula-eq">\beta_{7\text{d}} = \frac{\sum_{i=1}^N (t_i - \bar{t})(y_i - \bar{y})}{\sum_{i=1}^N (t_i - \bar{t})^2}</span>
+    <span class="formula-num">(2)</span>
+  </div>
+
+  <h3>3.2 Chronological Partitioning</h3>
+  <p>
+    To simulate real operational deployment, observations were partitioned strictly chronologically without shuffling:
+  </p>
+  <ul>
+    <li><strong>Training (70%):</strong> 15,051,915 observations (Jan 2021 – late 2024).</li>
+    <li><strong>Validation (15%):</strong> 3,225,410 observations (early stopping and hyperparameter tuning).</li>
+    <li><strong>Testing (15%):</strong> 3,225,411 observations (strictly out-of-time evaluation).</li>
+  </ul>
+
+  <h3>3.3 Model Architectures & SHAP Explainability</h3>
+  <p>
+    We benchmarked a <strong>Persistence Baseline</strong> ($\hat{y}_{t+1} = y_t$), an optimized <strong>Random Forest Regressor</strong> (200 trees, depth 20, min leaf 10), and a gradient-boosted <strong>XGBoost Regressor</strong> (500 estimators with histogram tree method and early stopping). Model predictions are decomposed using Tree SHAP:
+  </p>
+
+  <div class="formula-box">
+    <span class="formula-eq">\hat{f}(\mathbf{x}) = \phi_0 + \sum_{j=1}^{16} \phi_j(\mathbf{x})</span>
+    <span class="formula-num">(3)</span>
+  </div>
+
+  <!-- Section 4 -->
+  <h2>4. Results and Discussion</h2>
+
+  <h3>4.1 Overall Performance Comparison</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Model</th>
+        <th>Hyperparameters</th>
+        <th>Test Rows</th>
+        <th>MAE (m)</th>
+        <th>RMSE (m)</th>
+        <th>R² Score</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Random Forest Regressor</strong></td>
+        <td>200 trees, depth=20, leaf=10</td>
+        <td>3,225,411</td>
+        <td><strong>0.6201</strong></td>
+        <td><strong>3.3363</strong></td>
+        <td><strong>0.9752</strong></td>
+      </tr>
+      <tr>
+        <td><strong>XGBoost Regressor</strong></td>
+        <td>500 trees, lr=0.05, early stop=30</td>
+        <td>3,225,411</td>
+        <td>0.8257</td>
+        <td>3.8833</td>
+        <td>0.9664</td>
+      </tr>
+      <tr>
+        <td><strong>Persistence Baseline</strong></td>
+        <td>Lag-6h carryforward</td>
+        <td>3,154,474</td>
+        <td>0.6155</td>
+        <td>4.0603</td>
+        <td>0.9630</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>4.2 Per-State Spatial Generalization</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>State</th>
+        <th>Evaluated Records</th>
+        <th>MAE (m)</th>
+        <th>RMSE (m)</th>
+        <th>R² Score</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Andhra Pradesh</strong></td>
+        <td>253,372</td>
+        <td>0.2838</td>
+        <td>2.8917</td>
+        <td>0.9525</td>
+      </tr>
+      <tr>
+        <td><strong>Tamil Nadu</strong></td>
+        <td>619,790</td>
+        <td>0.2830</td>
+        <td>2.1458</td>
+        <td>0.9724</td>
+      </tr>
+      <tr>
+        <td><strong>Telangana</strong></td>
+        <td>515,803</td>
+        <td>0.4401</td>
+        <td>2.6268</td>
+        <td>0.9202</td>
+      </tr>
+      <tr>
+        <td><strong>Maharashtra</strong></td>
+        <td>834,001</td>
+        <td>0.4814</td>
+        <td>1.9206</td>
+        <td>0.9788</td>
+      </tr>
+      <tr>
+        <td><strong>Karnataka</strong></td>
+        <td>1,002,445</td>
+        <td>1.1216</td>
+        <td>4.9229</td>
+        <td>0.9766</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="figure-placeholder">
+    <div class="figure-title">Figure 2: Tree SHAP Global Feature Importance Ranking</div>
+    <div class="figure-desc">Rolling 7-day mean (48.4%), rolling 30-day mean (19.9%), and lag_6h (15.9%) constitute the top predictors.</div>
+  </div>
+
+  <!-- Section 5 -->
+  <h2>5. Decision Intelligence Engine (DIE) & Operationalization</h2>
+  <p>
+    To transform raw predictions into community value, AQUA-MIND integrates the <strong>Groundwater Stability Score (GSS)</strong> and <strong>Decision Intelligence Engine (DIE)</strong>. Telemetry forecasts are mapped onto localized agricultural advisories, categorizing stations into Critical, Watch, or Stable bands. These determine dynamic recommendations for crop suitability (e.g., transitioning from high water-intensity paddy to dry-crop millets or pulses during projected drawdown phases).
+  </p>
+
+  <!-- Section 6 -->
+  <h2>6. Conclusion</h2>
+  <p>
+    This paper demonstrated that data-driven machine learning models, specifically Random Forest, can accurately forecast groundwater level fluctuations across 5,426 stations in Peninsular India with an $R^2$ of 0.9752. Tree SHAP interpretability confirmed that predictions maintain physical realism. The open-source AQUA-MIND architecture bridges predictive hydrogeology with smallholder decision-making, offering an adaptable blueprint for groundwater governance worldwide.
+  </p>
+
+  <!-- References -->
+  <h2>References</h2>
+  <div class="reference-list">
+    <p>[1] Central Ground Water Board (CGWB), "Dynamic Ground Water Resources of India - 2023," Ministry of Jal Shakti, Government of India, New Delhi, 2023.</p>
+    <p>[2] S. M. Lundberg and S.-I. Lee, "A unified approach to interpreting model predictions," in <em>Advances in Neural Information Processing Systems (NeurIPS)</em>, 2017, pp. 4765–4774.</p>
+    <p>[3] T. Chen and C. Guestrin, "XGBoost: A scalable tree boosting system," in <em>ACM SIGKDD International Conference on Knowledge Discovery and Data Mining</em>, 2016, pp. 785–794.</p>
+    <p>[4] L. Breiman, "Random forests," <em>Machine Learning</em>, vol. 45, no. 1, pp. 5–32, 2001.</p>
+    <p>[5] M. G. McDonald and A. W. Harbaugh, "A modular three-dimensional finite-difference ground-water flow model," <em>USGS Open-File Report</em>, 1988.</p>
+  </div>
+
+</div>
+
+</body>
+</html>

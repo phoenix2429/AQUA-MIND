@@ -169,16 +169,51 @@ def calculate_gbim(values: Iterable[Observation], config: AnalyticsConfig | None
 def calculate_die(gss: dict[str, Any], gbim: dict[str, Any], config: AnalyticsConfig | None = None) -> dict[str, Any]:
     """Produce a cautious, indicator-driven decision-support recommendation."""
     config = config or AnalyticsConfig.from_environment()
+    slope = gss.get("components", {}).get("slope_m_per_day", 0.0) or 0.0
+    volatility = gbim.get("components", {}).get("volatility_m", 0.0) or 0.0
+    score_val = gss.get("score")
+
     if not gss.get("sufficient") or not gbim.get("sufficient"):
         priority, recommendation = "LOW", "Collect more valid groundwater-level observations before interpreting this indicator."
+        crop_rec = "Maintain baseline rainfed cropping; record has fewer than the required observations for confident groundwater-crop matching."
+        irrig_rec = "Follow local agricultural extension irrigation guidelines while telemetry record is being established."
+        gw_cond = "Insufficient historical telemetry to determine trend profile."
     elif gss["score"] < 40 or gbim["profile"] == "DECLINING":
         priority, recommendation = "HIGH", "Review the observed trend and monitoring coverage; this output does not identify a cause or prescribe extraction action."
+        score_str = f"{score_val:.1f}" if score_val is not None else "N/A"
+        crop_rec = f"Aquifer indicators signal critical depletion (GSS {score_str}/100, trend {slope:+.4f} m/day). Strictly prioritize drought-resilient, low-water crops (millets, pulses, oilseeds); restrict water-intensive cultivation."
+        irrig_rec = "Conserve groundwater: mandate drip or sprinkler irrigation, restrict pumping to cooler hours, and check soil moisture before every irrigation cycle."
+        gw_cond = f"Critical stress - declining water table (slope: {slope:+.4f} m/day, GSS: {score_str}/100)"
     elif gss["score"] < 70 or gbim["profile"] == "VOLATILE":
         priority, recommendation = "MEDIUM", "Continue monitoring and review the observed variability against local knowledge; no causal explanation is established."
+        score_str = f"{score_val:.1f}" if score_val is not None else "N/A"
+        crop_rec = f"Seasonal variability is high (volatility {volatility:.2f} m, GSS {score_str}/100). Suited for moderate water-intensity crops (maize, cotton, coarse grains) with staggered sowing; avoid heavy pre-monsoon pumping."
+        irrig_rec = "Practice deficit irrigation and alternate furrow watering; use organic mulching to suppress evaporative soil loss during dry spells."
+        gw_cond = f"Volatile / seasonal fluctuations (volatility: {volatility:.2f} m, GSS: {score_str}/100)"
     else:
         priority, recommendation = "LOW", "Continue routine monitoring; the observed series is comparatively stable under the configured thresholds."
+        score_str = f"{score_val:.1f}" if score_val is not None else "N/A"
+        crop_rec = f"Aquifer levels show relative stability (trend {slope:+.4f} m/day, GSS {score_str}/100). Standard seasonal rotational crops (cereals, vegetables, pulses) supported under sustainable withdrawal limits."
+        irrig_rec = "Apply standard crop-stage irrigation matching measured soil moisture; avoid unmetered flood irrigation."
+        gw_cond = f"Stable aquifer conditions (slope: {slope:+.4f} m/day, GSS: {score_str}/100)"
+
     indicators = {"gss_score": gss.get("score"), "trend_m_per_day": gss.get("components", {}).get("slope_m_per_day"), "gbim_profile": gbim.get("profile")}
-    return {"analytics_version": config.version, "result_type": "DIE", "score": gss.get("score"), "priority": priority, "profile": priority, "sufficient": gss.get("sufficient", False) and gbim.get("sufficient", False), "recommendation": recommendation, "action": recommendation, "reason": "Decision-support priority derived only from GSS and GBIM outputs.", "source_indicators": indicators, "components": {"gss": gss, "gbim": gbim, "thresholds": asdict(config)}}
+    return {
+        "analytics_version": config.version,
+        "result_type": "DIE",
+        "score": gss.get("score"),
+        "priority": priority,
+        "profile": priority,
+        "sufficient": gss.get("sufficient", False) and gbim.get("sufficient", False),
+        "recommendation": recommendation,
+        "action": recommendation,
+        "reason": "Decision-support priority derived only from GSS and GBIM outputs.",
+        "crop_recommendation": crop_rec,
+        "irrigation_recommendation": irrig_rec,
+        "groundwater_condition": gw_cond,
+        "source_indicators": indicators,
+        "components": {"gss": gss, "gbim": gbim, "thresholds": asdict(config)},
+    }
 
 
 def station_analytics(database: Session, station: Station, config: AnalyticsConfig | None = None) -> dict[str, Any]:

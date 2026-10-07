@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import time
 from datetime import datetime
 from typing import Any
 
@@ -20,6 +21,9 @@ from .ml.shap_explainer import ExplanationUnavailable, explain_station
 from .schemas import ForecastPoint, HistoricalPoint, NearbyStation, NearbyStationList, ObservationList, StationList, StationSummary, GSSResponse, GBIMResponse, RecommendationResponse, StationAnalyticsSummary, SHAPExplanation
 
 router = APIRouter(prefix="/api", tags=["telemetry"])
+
+_ADMIN_HEALTH_CACHE: dict[str, Any] = {"timestamp": 0.0, "data": None}
+_REGIONAL_CACHE: dict[tuple[str | None, str | None], tuple[float, dict[str, Any]]] = {}
 
 
 def haversine_km(latitude_a: float, longitude_a: float, latitude_b: float, longitude_b: float) -> float:
@@ -244,12 +248,20 @@ def list_models() -> list[dict[str, Any]]:
 
 @router.get("/admin/health")
 def admin_health(database: Session = Depends(get_db)) -> dict[str, Any]:
-    latest = database.scalar(select(func.max(Observation.timestamp)))
+    now_ts = time.time()
+    if _ADMIN_HEALTH_CACHE["data"] is not None and (now_ts - _ADMIN_HEALTH_CACHE["timestamp"]) < 60.0:
+        return _ADMIN_HEALTH_CACHE["data"]
+
+    latest = database.scalar(select(func.max(Station.latest_observation_timestamp)))
+    if latest is None:
+        latest = database.scalar(select(func.max(Observation.timestamp)))
     station_count = database.scalar(select(func.count()).select_from(Station)) or 0
-    observation_count = database.scalar(select(func.count()).select_from(Observation)) or 0
+    observation_count = database.scalar(select(func.sum(Station.observation_count))) or 0
+    if observation_count == 0:
+        observation_count = database.scalar(select(func.count()).select_from(Observation)) or 0
     now = datetime.utcnow()
     age_hours = (now - latest).total_seconds() / 3600 if latest else None
-    return {
+    result = {
         "status": "ok",
         "database": "ok",
         "station_count": station_count,
@@ -258,6 +270,9 @@ def admin_health(database: Session = Depends(get_db)) -> dict[str, Any]:
         "freshness_hours": round(age_hours, 2) if age_hours is not None else None,
         "pipeline_status": "loaded" if observation_count else "empty",
     }
+    _ADMIN_HEALTH_CACHE["timestamp"] = now_ts
+    _ADMIN_HEALTH_CACHE["data"] = result
+    return result
 
 
 @router.get("/regional/summary")
@@ -266,6 +281,13 @@ def regional_summary(
     district: str | None = None,
     database: Session = Depends(get_db),
 ) -> dict[str, Any]:
+    cache_key = (state, district)
+    now_ts = time.time()
+    if cache_key in _REGIONAL_CACHE:
+        cached_ts, cached_data = _REGIONAL_CACHE[cache_key]
+        if now_ts - cached_ts < 300.0:
+            return cached_data
+
     filters = []
     if state:
         filters.append(Station.state == state)
@@ -274,6 +296,14 @@ def regional_summary(
     station_query = select(Station).where(*filters)
     station_ids = select(Station.id).where(*filters)
     stations = database.scalars(station_query).all()
+
+    obs_filters = [
+        Observation.groundwater_level >= -300,
+        Observation.groundwater_level <= 50,
+    ]
+    if filters:
+        obs_filters.append(Observation.station_id.in_(station_ids))
+
     rows = database.execute(
         select(
             func.count(Observation.id),
@@ -281,16 +311,19 @@ def regional_summary(
             func.min(Observation.groundwater_level),
             func.max(Observation.groundwater_level),
             func.max(Observation.timestamp),
-        ).where(
-            Observation.station_id.in_(station_ids),
-            Observation.groundwater_level >= -300,
-            Observation.groundwater_level <= 50,
-        )
+        ).where(*obs_filters)
     ).one()
     distribution = database.execute(
         select(Station.state, func.count(Station.id)).where(*filters).group_by(Station.state)
     ).all()
-    return {
+    analytics_count = (
+        database.scalar(
+            select(func.count()).select_from(AnalyticalResult).where(AnalyticalResult.station_id.in_(station_ids))
+        )
+        if filters
+        else database.scalar(select(func.count()).select_from(AnalyticalResult))
+    ) or 0
+    result = {
         "state": state,
         "district": district,
         "station_count": len(stations),
@@ -300,7 +333,7 @@ def regional_summary(
         "maximum_groundwater_level": rows[3],
         "latest_observation_timestamp": rows[4],
         "state_station_distribution": [{"state": item[0], "stations": item[1]} for item in distribution],
-        "persisted_analytics_count": database.scalar(
-            select(func.count()).select_from(AnalyticalResult).where(AnalyticalResult.station_id.in_(station_ids))
-        ) or 0,
+        "persisted_analytics_count": analytics_count,
     }
+    _REGIONAL_CACHE[cache_key] = (now_ts, result)
+    return result
