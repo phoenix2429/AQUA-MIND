@@ -1,10 +1,11 @@
 import React, { memo, useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import { Link } from 'react-router-dom';
 import L from 'leaflet';
-import { MapPin, Calendar, Database, ChevronRight } from 'lucide-react';
+import { MapPin, Calendar, Database, ChevronRight, LocateFixed, LoaderCircle } from 'lucide-react';
 import { stationRoute } from '../../services/stationRoutes';
+import { getMapStation } from './mapCoordinates';
 import 'leaflet/dist/leaflet.css';
 import 'react-leaflet-cluster/lib/assets/MarkerCluster.css';
 import 'react-leaflet-cluster/lib/assets/MarkerCluster.Default.css';
@@ -25,6 +26,55 @@ function MapRecenter({ center }) {
     }
   }, [center, map]);
   return null;
+}
+
+function CurrentLocationControl({ location, onLocate, locating }) {
+  const map = useMap();
+
+  const handleLocate = () => {
+    onLocate((position) => {
+      const nextLocation = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+      };
+      map.flyTo([nextLocation.latitude, nextLocation.longitude], 10, { duration: 1 });
+      return nextLocation;
+    });
+  };
+
+  return (
+    <>
+      <div className="leaflet-top leaflet-right" style={{ marginTop: 10, marginRight: 10 }}>
+        <button
+          type="button"
+          onClick={handleLocate}
+          disabled={locating}
+          title="Center map on my current location"
+          aria-label="Center map on my current location"
+          className="leaflet-control rounded-lg border border-slate-200 bg-white p-2 text-slate-700 shadow-md hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60"
+        >
+          {locating ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}
+        </button>
+      </div>
+      {location && (
+        <>
+          <Circle
+            center={[location.latitude, location.longitude]}
+            radius={Math.max(location.accuracy || 0, 25)}
+            pathOptions={{ color: '#0284c7', fillColor: '#38bdf8', fillOpacity: 0.14 }}
+          />
+          <Marker position={[location.latitude, location.longitude]}>
+            <Popup>
+              <strong>Your current location</strong>
+              <br />
+              Accuracy: approximately {Math.round(location.accuracy || 0)} m
+            </Popup>
+          </Marker>
+        </>
+      )}
+    </>
+  );
 }
 
 const StationMarker = memo(function StationMarker({ station }) {
@@ -64,8 +114,15 @@ const StationMarker = memo(function StationMarker({ station }) {
   );
 });
 
-export const StationMap = memo(function StationMap({ stations = [], center = [17.385, 78.4867], zoom = 7 }) {
-  const validStations = useMemo(() => stations.filter(
+export const StationMap = memo(function StationMap({
+  stations = [],
+  center = [17.385, 78.4867],
+  zoom = 7,
+  location,
+  onLocate,
+  locating = false,
+}) {
+  const validStations = useMemo(() => stations.map(getMapStation).filter(
     (s) => typeof s.latitude === 'number' && typeof s.longitude === 'number'
   ), [stations]);
 
@@ -78,6 +135,7 @@ export const StationMap = memo(function StationMap({ stations = [], center = [17
         className="w-full h-full"
       >
         <MapRecenter center={center} />
+        <CurrentLocationControl location={location} onLocate={onLocate} locating={locating} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

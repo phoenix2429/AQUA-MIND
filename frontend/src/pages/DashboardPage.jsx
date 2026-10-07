@@ -32,6 +32,8 @@ export function DashboardPage() {
   const [featuredStations, setFeaturedStations] = useState([]);
   const [models, setModels] = useState([]);
   const [regional, setRegional] = useState(null);
+  const [regionalState, setRegionalState] = useState('');
+  const [health, setHealth] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -40,16 +42,22 @@ export function DashboardPage() {
       try {
         setLoading(true);
         setError(null);
-        const [statesData, stationsResponse, modelsData] = await Promise.allSettled([
+        const [statesData, stationsResponse, modelsData, healthData] = await Promise.allSettled([
           stationService.getStates(),
           stationService.getStations({ page: 1, pageSize: 6 }),
           forecastService.getModels(),
+          api.get('/health'),
         ]);
 
-        if (statesData.status === 'fulfilled') setStates(statesData.value || []);
+        if (statesData.status === 'fulfilled') {
+          const availableStates = statesData.value || [];
+          setStates(availableStates);
+          if (availableStates.length > 0) setRegionalState(availableStates[0]);
+        }
         if (stationsResponse.status === 'fulfilled') setFeaturedStations(stationsResponse.value?.items || []);
         if (modelsData.status === 'fulfilled') setModels(modelsData.value || []);
-        if ([statesData, stationsResponse, modelsData].some((result) => result.status === 'rejected')) {
+        if (healthData.status === 'fulfilled') setHealth(healthData.value);
+        if ([statesData, stationsResponse, modelsData, healthData].some((result) => result.status === 'rejected')) {
           setError('Some dashboard data could not be loaded from the backend.');
         }
       } finally {
@@ -60,12 +68,12 @@ export function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (role === 'official' && !regional) {
-      api.get('/api/regional/summary', {}, { cacheTtlMs: 300000 })
+    if (role === 'official' && regionalState) {
+      api.get('/api/regional/summary', { state: regionalState })
         .then((res) => setRegional(res))
         .catch(() => {});
     }
-  }, [role, regional]);
+  }, [role, regionalState]);
 
   return (
     <div className="space-y-6">
@@ -152,9 +160,45 @@ export function DashboardPage() {
         </div>
       )}
 
+      {role === 'public' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="surface p-5">
+            <p className="eyebrow">Coverage</p>
+            <p className="mt-2 text-2xl font-extrabold text-slate-950">{states.length || '—'} states</p>
+            <p className="mt-1 text-xs text-slate-500">Browse official groundwater telemetry coverage.</p>
+          </div>
+          <div className="surface p-5">
+            <p className="eyebrow">Discovery</p>
+            <p className="mt-2 text-2xl font-extrabold text-slate-950">Station search</p>
+            <p className="mt-1 text-xs text-slate-500">Search, filter, and open a real station analysis workspace.</p>
+          </div>
+          <div className="surface p-5">
+            <p className="eyebrow">Explore next</p>
+            <p className="mt-2 text-2xl font-extrabold text-slate-950">Live map</p>
+            <p className="mt-1 text-xs text-slate-500">Use the map to discover telemetry near each monitored region.</p>
+          </div>
+        </div>
+      )}
+
       {/* GOVERNMENT OFFICIAL SPECIFIC EXPERIENCE */}
       {role === 'official' && (
         <div className="space-y-6">
+          <div className="surface flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="eyebrow">Regional lens</p>
+              <p className="text-sm font-bold text-slate-900">Review one state at a time for responsive telemetry aggregation.</p>
+            </div>
+            <select
+              value={regionalState}
+              onChange={(event) => {
+                setRegionalState(event.target.value);
+                setRegional(null);
+              }}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800"
+            >
+              {states.map((state) => <option key={state} value={state}>{state}</option>)}
+            </select>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-2">
               <span className="text-[10px] font-extrabold uppercase text-slate-400">States Monitored</span>
@@ -165,6 +209,15 @@ export function DashboardPage() {
               <span className="text-[10px] font-extrabold uppercase text-slate-400">Regional telemetry</span>
               <p className="text-2xl font-extrabold text-blue-900">{regional?.station_count?.toLocaleString() || '—'} Stations</p>
               <p className="text-xs text-slate-500">{regional?.observation_count?.toLocaleString() || '—'} observations</p>
+            </div>
+            <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-2">
+              <span className="text-[10px] font-extrabold uppercase text-slate-400">Average groundwater</span>
+              <p className="text-2xl font-extrabold text-blue-900">
+                {Number.isFinite(Number(regional?.average_groundwater_level))
+                  ? `${Number(regional.average_groundwater_level).toFixed(2)} m`
+                  : '—'}
+              </p>
+              <p className="text-xs text-slate-500">{regionalState || 'Select a state'} filtered telemetry</p>
             </div>
             <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-2">
               <span className="text-[10px] font-extrabold uppercase text-slate-400">Sustainability Framework</span>
@@ -180,6 +233,22 @@ export function DashboardPage() {
               <span className="text-[10px] font-extrabold uppercase text-slate-400">Explainable AI</span>
               <p className="text-2xl font-extrabold text-blue-900">Tree SHAP</p>
               <p className="text-xs text-slate-500">Attribution without causal overclaims</p>
+            </div>
+          </div>
+          <div className="surface p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="eyebrow">Telemetry distribution</p>
+                <h2 className="text-base font-extrabold text-slate-950">Station coverage by state</h2>
+              </div>
+              <span className="text-xs text-slate-500">{regional?.latest_observation_timestamp ? 'Latest data available' : 'Loading state summary'}</span>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {(regional?.state_station_distribution || []).map((item) => (
+                <span key={item.state} className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
+                  {item.state}: {item.stations?.toLocaleString()}
+                </span>
+              ))}
             </div>
           </div>
         </div>
@@ -201,8 +270,10 @@ export function DashboardPage() {
             </div>
             <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-2xs space-y-2">
               <span className="text-[10px] font-extrabold uppercase text-slate-400">FastAPI Route Status</span>
-              <p className="text-2xl font-extrabold text-emerald-600">Connected</p>
-              <p className="text-xs text-slate-500">API response received</p>
+              <p className={`text-2xl font-extrabold ${health?.status === 'ok' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                {health?.status === 'ok' ? 'Connected' : 'Unavailable'}
+              </p>
+              <p className="text-xs text-slate-500">Live health response</p>
             </div>
           </div>
         </div>

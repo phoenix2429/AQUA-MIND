@@ -1,14 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Droplet, Search, ChevronDown, Menu } from 'lucide-react';
+import { Droplet, Search, ChevronDown, Menu, MapPin, LoaderCircle } from 'lucide-react';
 import { useRole, STAKEHOLDER_ROLES } from '../../context/RoleContext';
 import { api } from '../../services/api';
+import { stationService } from '../../services/stationService';
+import { stationRoute } from '../../services/stationRoutes';
 
 export function Navbar({ onToggleSidebar }) {
   const { role, changeRole, roleInfo } = useRole();
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchStations, setSearchStations] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [backendStatus, setBackendStatus] = useState('checking');
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+  const searchRequest = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,12 +35,66 @@ export function Navbar({ onToggleSidebar }) {
     };
   }, []);
 
+  useEffect(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (query.length < 2) {
+      setSearchStations([]);
+      setSearchLoading(false);
+      return undefined;
+    }
+
+    let active = true;
+    setSearchOpen(true);
+    setSearchLoading(true);
+
+    async function loadSearchIndex() {
+      try {
+        if (!searchRequest.current) {
+          searchRequest.current = stationService.getStates()
+            .then((states) => stationService.getAllStations(states))
+            .finally(() => {
+              searchRequest.current = null;
+            });
+        }
+        const stations = await searchRequest.current;
+        if (!active) return;
+        const matches = stations
+          .filter((station) => [
+            station.station_name,
+            station.station_id,
+            station.state,
+            station.district,
+            station.village,
+          ].some((value) => value?.toLowerCase().includes(query)))
+          .slice(0, 8);
+        setSearchStations(matches);
+      } catch (_) {
+        if (active) setSearchStations([]);
+      } finally {
+        if (active) setSearchLoading(false);
+      }
+    }
+
+    loadSearchIndex();
+    return () => {
+      active = false;
+    };
+  }, [searchQuery]);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      setSearchOpen(false);
       navigate(`/stations?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
+
+  const searchMessage = useMemo(() => {
+    if (searchQuery.trim().length < 2) return 'Type at least 2 characters to search stations';
+    if (searchLoading) return 'Searching telemetry stations…';
+    if (!searchStations.length) return 'No matching stations found';
+    return null;
+  }, [searchLoading, searchQuery, searchStations.length]);
 
   const RoleIcon = roleInfo.icon;
 
@@ -71,16 +131,61 @@ export function Navbar({ onToggleSidebar }) {
         </div>
 
         {/* Center: Search Box */}
-        <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center flex-1 max-w-sm mx-6">
+        <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center flex-1 max-w-sm mx-6" role="search">
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
               placeholder="Search telemetry station or district..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setSearchOpen(true)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setSearchOpen(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  setSearchOpen(false);
+                  e.currentTarget.blur();
+                }
+              }}
+              aria-label="Search telemetry stations"
+              aria-expanded={searchOpen}
+              aria-controls="navbar-search-suggestions"
               className={`w-full pl-9 pr-4 py-2 text-xs bg-white/10 border border-white/15 rounded-xl font-medium text-white focus:outline-none focus:ring-2 transition-all placeholder:text-slate-400 ${roleInfo.theme.ring}`}
             />
+            {searchOpen && (
+              <div
+                id="navbar-search-suggestions"
+                className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 text-left shadow-2xl"
+              >
+                {searchLoading && (
+                  <div className="flex items-center gap-2 px-3 py-3 text-xs text-slate-500">
+                    <LoaderCircle className="h-4 w-4 animate-spin text-cyan-600" />
+                    <span>Searching telemetry stations…</span>
+                  </div>
+                )}
+                {!searchLoading && searchStations.map((station) => (
+                  <Link
+                    key={station.id ?? station.station_id}
+                    to={stationRoute(station.station_id)}
+                    onClick={() => setSearchOpen(false)}
+                    className="flex items-start gap-2 rounded-xl px-3 py-2.5 hover:bg-slate-50"
+                  >
+                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
+                    <span className="min-w-0">
+                      <span className="block truncate text-xs font-bold text-slate-900">{station.station_name}</span>
+                      <span className="block truncate text-[10px] text-slate-500">
+                        {[station.district, station.state].filter(Boolean).join(' · ')}
+                      </span>
+                    </span>
+                  </Link>
+                ))}
+                {!searchLoading && searchMessage && (
+                  <div className="px-3 py-3 text-xs text-slate-500">{searchMessage}</div>
+                )}
+              </div>
+            )}
           </div>
         </form>
 

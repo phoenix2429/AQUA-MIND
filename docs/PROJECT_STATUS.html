@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AQUA-MIND — Project Status Report</title>
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --border: #e2e8f0;
+      --bg: #ffffff;
+      --surface: #f8fafc;
+      --code-bg: #f1f5f9;
+      --success: #16a34a;
+      --success-bg: #dcfce7;
+      --pending: #ea580c;
+      --pending-bg: #ffedd5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background-color: #f1f5f9;
+      line-height: 1.6;
+      padding: 30px 15px;
+    }
+
+    .no-print-bar {
+      max-width: 960px;
+      margin: 0 auto 24px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0f172a;
+      color: white;
+      padding: 14px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);
+    }
+
+    .no-print-bar button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+
+    .no-print-bar button:hover {
+      background: var(--primary-dark);
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      background: var(--bg);
+      padding: 50px 60px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    .header {
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 16px;
+      margin-bottom: 28px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+    }
+
+    .header .subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-style: italic;
+    }
+
+    h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 36px;
+      margin-bottom: 14px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 22px;
+      margin-bottom: 8px;
+    }
+
+    p {
+      font-size: 14px;
+      margin-bottom: 12px;
+      color: #334155;
+    }
+
+    ul {
+      list-style-type: none;
+      margin-bottom: 16px;
+    }
+
+    li {
+      font-size: 13.5px;
+      color: #334155;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .check-done {
+      color: var(--success);
+      font-weight: bold;
+    }
+
+    .check-pending {
+      color: var(--pending);
+      font-weight: bold;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px 0;
+      font-size: 13px;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 9px 12px;
+      text-align: left;
+    }
+
+    th {
+      background: var(--surface);
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    tr:nth-child(even) {
+      background: #fafbfc;
+    }
+
+    td.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .status-complete {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+
+    .status-pending {
+      background: var(--pending-bg);
+      color: var(--pending);
+    }
+
+    pre {
+      background: var(--code-bg);
+      padding: 12px 16px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12.5px;
+      margin: 14px 0;
+      overflow-x: auto;
+      line-height: 1.5;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      background: var(--code-bg);
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+
+    .footer {
+      margin-top: 40px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    @media print {
+      @page {
+        size: A4;
+        margin: 15mm;
+      }
+      body {
+        background: #fff;
+        padding: 0;
+      }
+      .no-print-bar {
+        display: none !important;
+      }
+      .container {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        max-width: 100%;
+      }
+      table, pre {
+        page-break-inside: avoid;
+      }
+      h2, h3 {
+        page-break-after: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Control Bar -->
+<div class="no-print-bar">
+  <div>
+    <strong>📄 AQUA-MIND Project Status Report (Printable Document)</strong>
+    <div style="font-size: 12px; opacity: 0.85;">Derived directly from <code>PROJECT_STATUS.md</code></div>
+  </div>
+  <button onclick="window.print()">
+    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+      <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+      <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
+    </svg>
+    Save as PDF / Print
+  </button>
+</div>
+
+<div class="container">
+
+  <div class="header">
+    <h1>AQUA-MIND — Project Status Report</h1>
+    <div class="subtitle">Last Updated: 2026-09-26</div>
+  </div>
+
+  <!-- Quick Summary -->
+  <h2>🚀 Quick Summary</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 32%;">Area</th>
+        <th style="width: 18%;">Status</th>
+        <th style="width: 50%;">Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>5-State Ingestion Pipeline</strong></td>
+        <td><span class="status-badge status-complete">✅ Complete</span></td>
+        <td>All 10 local telemetry resources are present and processed (5,426 stations, 21.6M obs)</td>
+      </tr>
+      <tr>
+        <td><strong>Folder Structure (<code>data/raw/&lt;State&gt;/</code>)</strong></td>
+        <td><span class="status-badge status-complete">✅ Complete</span></td>
+        <td>Organized into the five state folders and two resource periods</td>
+      </tr>
+      <tr>
+        <td><strong>Data Cleanup</strong></td>
+        <td><span class="status-badge status-complete">✅ Complete</span></td>
+        <td>Duplicate detection and raw-file preservation are implemented</td>
+      </tr>
+      <tr>
+        <td><strong><code>.gitignore</code> Protection</strong></td>
+        <td><span class="status-badge status-complete">✅ Complete</span></td>
+        <td>Data CSVs, local databases, and model binaries are excluded from GitHub</td>
+      </tr>
+      <tr>
+        <td><strong>Data Quality Policy & Filtering</strong></td>
+        <td><span class="status-badge status-complete">✅ Verified</span></td>
+        <td>10 quality-filtered files; parsed values remain within [-300 m, +50 m] with no non-finite values</td>
+      </tr>
+      <tr>
+        <td><strong>Feature Engineering Pipeline</strong></td>
+        <td><span class="status-badge status-complete">✅ Implemented</span></td>
+        <td>Lags, rolling statistics, OLS trend, calendar, and station features are implemented</td>
+      </tr>
+      <tr>
+        <td><strong>Persistence Baseline Evaluation</strong></td>
+        <td><span class="status-badge status-complete">✅ Complete</span></td>
+        <td>Evaluation script fixed and rerun for 10 resources and 5,426 stations</td>
+      </tr>
+      <tr>
+        <td><strong>Machine Learning Models (RF & XGB)</strong></td>
+        <td><span class="status-badge status-complete">✅ Full Run Verified</span></td>
+        <td>RF/XGBoost trained on 21,502,736 feature rows; binaries load and predict locally</td>
+      </tr>
+      <tr>
+        <td><strong>Backend Foundation (FastAPI + SQLAlchemy)</strong></td>
+        <td><span class="status-badge status-complete">✅ Implemented</span></td>
+        <td>Read-only REST API and persistence forecast routing are available</td>
+      </tr>
+      <tr>
+        <td><strong>Test Suite</strong></td>
+        <td><span class="status-badge status-complete">✅ 105/105 Passed</span></td>
+        <td>Complete backend suite passes 105/105; frontend suite passes 5/5</td>
+      </tr>
+      <tr>
+        <td><strong>Data Sharing (Kaggle)</strong></td>
+        <td><span class="status-badge status-complete">✅ Setup Documented</span></td>
+        <td>Full local data remains external; <code>scripts/setup_kaggle_data.py</code> validates and retrieves it</td>
+      </tr>
+      <tr>
+        <td><strong>Database Indexing & Optimization</strong></td>
+        <td><span class="status-badge status-complete">✅ Complete</span></td>
+        <td>Composite indexes created for observations and stations; TTL in-memory caching active</td>
+      </tr>
+      <tr>
+        <td><strong>Tree SHAP Explainability</strong></td>
+        <td><span class="status-badge status-complete">✅ Implemented</span></td>
+        <td>Local RF/XGBoost explanations, additivity checks, API endpoints, and documentation verified</td>
+      </tr>
+      <tr>
+        <td><strong>GSS, GBIM & DIE Analytics</strong></td>
+        <td><span class="status-badge status-complete">✅ Implemented</span></td>
+        <td>Deterministic, versioned, threshold-configurable observation-only outputs</td>
+      </tr>
+      <tr>
+        <td><strong>Expanded REST API</strong></td>
+        <td><span class="status-badge status-complete">✅ Implemented</span></td>
+        <td>16 verified REST endpoints (GSS, GBIM, DIE, SHAP, and station analytics)</td>
+      </tr>
+      <tr>
+        <td><strong>React / Vite Frontend</strong></td>
+        <td><span class="status-badge status-complete">✅ Complete</span></td>
+        <td>SPA fully implemented with 10 responsive pages, role themes, charts, and API client</td>
+      </tr>
+      <tr>
+        <td><strong>Interactive Geospatial Map</strong></td>
+        <td><span class="status-badge status-complete">✅ Complete</span></td>
+        <td>Clustered Leaflet map rendering all 5,426 stations with zero popup latency</td>
+      </tr>
+      <tr>
+        <td><strong>Farmer Experience & Crop Guidance</strong></td>
+        <td><span class="status-badge status-complete">✅ Complete</span></td>
+        <td>State → District → Station selection with real DIE station-specific crop recommendations</td>
+      </tr>
+      <tr>
+        <td><strong>Authentication & RBAC</strong></td>
+        <td><span class="status-badge status-pending">⏳ Demo Toggle</span></td>
+        <td>Client-side <code>localStorage</code> presentation switcher; backend JWT protection pending</td>
+      </tr>
+      <tr>
+        <td><strong>Documentation & Final Audit</strong></td>
+        <td><span class="status-badge status-complete">✅ Complete</span></td>
+        <td>Comprehensive audit documented in <code>docs/FINAL_PROJECT_AUDIT.md</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Phase-By-Phase Status -->
+  <h2>📑 Phase-By-Phase Status</h2>
+
+  <h3>✅ STEP 1 — Five-State Dataset Ingestion & Layout</h3>
+  <ul>
+    <li><span class="check-done">[x]</span> Ten local telemetry CSV resources are present across Telangana, Andhra Pradesh, Karnataka, Tamil Nadu, and Maharashtra.</li>
+    <li><span class="check-done">[x]</span> SHA-256 duplicate detection is implemented.</li>
+    <li><span class="check-done">[x]</span> State-folder layout is supported by <code>scripts/process_all_states.py</code>.</li>
+    <li><span class="check-done">[x]</span> Raw CSV files are read-only inputs and are not modified by the pipeline.</li>
+    <li><span class="check-done">[x]</span> Timestamp, groundwater, coordinate, and duplicate validation are implemented.</li>
+    <li><span class="check-done">[x]</span> The local normalized output contains 10 resource files.</li>
+  </ul>
+
+  <h3>✅ STEP 2 — Data Quality Policy & Filtering</h3>
+  <ul>
+    <li><span class="check-done">[x]</span> Quality policy documented in <code>docs/data-quality-policy.md</code>.</li>
+    <li><span class="check-done">[x]</span> <code>scripts/apply_quality_filter.py</code> applies the inclusive <code>[-300, +50]</code> meter bounds.</li>
+    <li><span class="check-done">[x]</span> Non-finite and malformed groundwater values are rejected.</li>
+    <li><span class="check-done">[x]</span> Ten quality-filtered files are present locally.</li>
+    <li><span class="check-done">[x]</span> Verification found no filtered values below -300 m, above +50 m, or non-finite.</li>
+    <li><span class="check-done">[x]</span> Raw and normalized files remain separate from filtered outputs.</li>
+  </ul>
+
+  <h3>🔄 STEP 3 — Database Ingestion</h3>
+  <ul>
+    <li><span class="check-done">[x]</span> SQLAlchemy schema and SQLite/PostgreSQL session configuration exist.</li>
+    <li><span class="check-done">[x]</span> Station registry and batch loader exist.</li>
+    <li><span class="check-pending">[ ]</span> Alembic migrations are not implemented.</li>
+    <li><span class="check-pending">[ ]</span> PostgreSQL COPY-based bulk loading is not implemented.</li>
+    <li><span class="check-pending">[ ]</span> Production loading is not yet transactional/upsert-safe.</li>
+    <li><span class="check-pending">[ ]</span> Production database verification is not complete.</li>
+  </ul>
+
+  <h3>✅ STEP 4 — Feature Engineering Pipeline</h3>
+  <ul>
+    <li><span class="check-done">[x]</span> Feature generator exists in <code>scripts/create_features.py</code>.</li>
+    <li><span class="check-done">[x]</span> Lags: <code>lag_6h</code>, <code>lag_12h</code>, <code>lag_24h</code>, <code>lag_48h</code>, and <code>lag_7d</code>.</li>
+    <li><span class="check-done">[x]</span> Rolling statistics: 7-day mean/std and 30-day mean.</li>
+    <li><span class="check-done">[x]</span> Trend: 7-day OLS slope in meters per hour.</li>
+    <li><span class="check-done">[x]</span> Calendar: hour, day of year, month, and India-centric season.</li>
+    <li><span class="check-done">[x]</span> Station metadata: latitude, longitude, and elevation.</li>
+    <li><span class="check-done">[x]</span> Feature state is calculated from historical observations only.</li>
+  </ul>
+
+  <h3>✅ STEP 5 — Machine Learning Forecasting</h3>
+  <ul>
+    <li><span class="check-done">[x]</span> Persistence baseline implementation exists.</li>
+    <li><span class="check-done">[x]</span> Persistence evaluation completes and writes <code>models/persistence_evaluation.json</code>.</li>
+    <li><span class="check-done">[x]</span> Random Forest wrapper exists with deterministic parameters and serialization support.</li>
+    <li><span class="check-done">[x]</span> XGBoost wrapper exists with validation-set early stopping support.</li>
+    <li><span class="check-done">[x]</span> Training pipeline defines chronological 70/15/15 masks and training-set imputation.</li>
+    <li><span class="check-done">[x]</span> Full 100% run completed across 21,502,736 feature rows.</li>
+    <li><span class="check-done">[x]</span> Chronological split completed: 15,051,915 train; 3,225,410 validation; 3,225,411 test.</li>
+    <li><span class="check-done">[x]</span> Random Forest binary saved and independently loaded for prediction.</li>
+    <li><span class="check-done">[x]</span> XGBoost binary saved and independently loaded for prediction.</li>
+    <li><span class="check-done">[x]</span> RF/XGBoost API forecast test passes with local binaries.</li>
+  </ul>
+
+  <h3>✅ STEP 6 — Backend API Foundation & ML Forecast Routing</h3>
+  <ul>
+    <li><span class="check-done">[x]</span> <code>GET /health</code></li>
+    <li><span class="check-done">[x]</span> <code>GET /api/states</code> and <code>GET /api/states/{state}/districts</code></li>
+    <li><span class="check-done">[x]</span> <code>GET /api/stations</code> with pagination and filters</li>
+    <li><span class="check-done">[x]</span> <code>GET /api/stations/{station_id}/observations</code> and <code>/history</code></li>
+    <li><span class="check-done">[x]</span> Persistence, Random Forest, and XGBoost forecast endpoints</li>
+    <li><span class="check-done">[x]</span> <code>GET /api/stations/nearby</code> and <code>GET /api/models</code></li>
+  </ul>
+
+  <h3>✅ STEP 7 — Tests & Version Control</h3>
+  <ul>
+    <li><span class="check-done">[x]</span> Repository changes committed and pushed.</li>
+    <li><span class="check-done">[x]</span> 105 backend tests pass; frontend test suite passes.</li>
+    <li><span class="check-done">[x]</span> API ML forecast test passes with generated local binaries.</li>
+  </ul>
+
+  <!-- Verified Model Results -->
+  <h2>📊 Verified Full-Run Model Results</h2>
+  <pre>Feature rows: 21,502,736
+Train: 15,051,915 (70%)
+Validation: 3,225,410 (15%)
+Test: 3,225,411 (15%)</pre>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Model</th>
+        <th style="text-align: right;">Test rows</th>
+        <th style="text-align: right;">MAE</th>
+        <th style="text-align: right;">RMSE</th>
+        <th style="text-align: right;">R²</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Persistence</strong></td>
+        <td class="num">3,154,474</td>
+        <td class="num">0.615484</td>
+        <td class="num">4.060324</td>
+        <td class="num">0.962951</td>
+      </tr>
+      <tr>
+        <td><strong>Random Forest</strong></td>
+        <td class="num">3,225,411</td>
+        <td class="num">0.620130</td>
+        <td class="num">3.336320</td>
+        <td class="num"><strong>0.975177</strong></td>
+      </tr>
+      <tr>
+        <td><strong>XGBoost</strong></td>
+        <td class="num">3,225,411</td>
+        <td class="num">0.825719</td>
+        <td class="num">3.883306</td>
+        <td class="num">0.966370</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Local Integration Status -->
+  <h2>Current Local Integration Status</h2>
+
+  <h3>Completed</h3>
+  <ul>
+    <li><span class="check-done">•</span> React/Vite frontend is connected to the FastAPI APIs and supports five-state station discovery.</li>
+    <li><span class="check-done">•</span> SQLite contains 5,426 stations and 21,667,754 unique observations.</li>
+    <li><span class="check-done">•</span> SQLite integrity is <code>ok</code>, with no orphan observations or duplicate station/timestamp pairs.</li>
+    <li><span class="check-done">•</span> Station routes safely encode IDs containing <code>/</code>, spaces, and <code>:</code>.</li>
+    <li><span class="check-done">•</span> Backend tests pass 105 tests; frontend service tests pass 5 tests; production build succeeds.</li>
+    <li><span class="check-done">•</span> GSS, GBIM, and DIE are available dynamically from measured telemetry.</li>
+    <li><span class="check-done">•</span> Farmer advisory cards use real station history, forecast, and analytical indicators.</li>
+    <li><span class="check-done">•</span> <code>/api/admin/health</code> reports database counts, latest observation time, freshness, and pipeline state.</li>
+    <li><span class="check-done">•</span> <code>/api/regional/summary</code> reports five-state regional and filtered state/district telemetry summaries.</li>
+  </ul>
+
+  <h3>Remaining Work</h3>
+  <ul>
+    <li><span class="check-pending">•</span> Authentication and RBAC are not implemented; role switching is presentation-only.</li>
+    <li><span class="check-pending">•</span> Scenario analysis remains an explicitly synthetic demonstration page.</li>
+    <li><span class="check-pending">•</span> Government station comparison and full regional GSS/GBIM distribution visualizations pending.</li>
+    <li><span class="check-pending">•</span> Persisted analytics have not been batch-generated for all five states.</li>
+  </ul>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div>AQUA-MIND Project Status Report</div>
+    <div>2026-09-26</div>
+  </div>
+
+</div>
+
+</body>
+</html>

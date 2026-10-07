@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { MapPin, Navigation, Filter, Radio } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { MapPin, Filter } from 'lucide-react';
 import { stationService } from '../services/stationService';
 import { StationMap } from '../components/map/StationMap';
+import { getMapStation } from '../components/map/mapCoordinates';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { ErrorMessage } from '../components/common/ErrorMessage';
 
@@ -9,6 +10,8 @@ export function MapPage() {
   const [states, setStates] = useState([]);
   const [selectedState, setSelectedState] = useState('');
   const [allStations, setAllStations] = useState([]);
+  const [location, setLocation] = useState(null);
+  const [locating, setLocating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -40,8 +43,8 @@ export function MapPage() {
 
   const stations = useMemo(
     () => selectedState
-      ? allStations.filter((station) => station.state === selectedState)
-      : allStations,
+      ? allStations.filter((station) => station.state === selectedState).map(getMapStation)
+      : allStations.map(getMapStation),
     [allStations, selectedState],
   );
   const mapCenter = useMemo(() => {
@@ -49,11 +52,39 @@ export function MapPage() {
       (station) => typeof station.latitude === 'number' && typeof station.longitude === 'number',
     );
     if (!withCoords.length) return [17.385, 78.4867];
+    const median = (values) => {
+      const sorted = [...values].sort((a, b) => a - b);
+      const middle = Math.floor(sorted.length / 2);
+      return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+    };
     return [
-      withCoords.reduce((sum, station) => sum + station.latitude, 0) / withCoords.length,
-      withCoords.reduce((sum, station) => sum + station.longitude, 0) / withCoords.length,
+      median(withCoords.map((station) => station.latitude)),
+      median(withCoords.map((station) => station.longitude)),
     ];
   }, [stations]);
+
+  const handleLocate = useCallback((onLocated) => {
+    if (!navigator.geolocation) {
+      window.alert('Current location is not supported by this browser.');
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const nextLocation = onLocated(position);
+        setLocation(nextLocation);
+        setLocating(false);
+      },
+      (geoError) => {
+        setLocating(false);
+        const message = geoError.code === geoError.PERMISSION_DENIED
+          ? 'Location permission was denied.'
+          : 'Current location is unavailable.';
+        window.alert(message);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+    );
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -101,7 +132,14 @@ export function MapPage() {
             <span>Click any marker to inspect station details</span>
           </div>
 
-          <StationMap stations={stations} center={mapCenter} zoom={selectedState ? 8 : 6} />
+          <StationMap
+            stations={stations}
+            center={mapCenter}
+            zoom={selectedState ? 8 : 6}
+            location={location}
+            onLocate={handleLocate}
+            locating={locating}
+          />
         </div>
       )}
     </div>
