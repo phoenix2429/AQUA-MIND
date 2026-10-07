@@ -4,12 +4,10 @@
  */
 
 const rawBaseUrl = import.meta.env.VITE_API_BASE_URL ?? '';
-// When accessed from another machine or via a tunnel (HTTPS), always use relative URL ('')
-// so requests proxy through Vite and avoid Mixed Content or teammate localhost connection errors.
-const isRemoteOrTunnel = typeof window !== 'undefined' && 
-  window.location.hostname !== 'localhost' && 
-  window.location.hostname !== '127.0.0.1';
-const BASE_URL = isRemoteOrTunnel ? '' : rawBaseUrl;
+// Use the configured backend URL for separate deployments (for example, Render
+// static site + Render web service). An empty value keeps local same-origin
+// and Vite-proxy behavior.
+const BASE_URL = rawBaseUrl.replace(/\/$/, '');
 
 export class ApiError extends Error {
   constructor(message, status, data) {
